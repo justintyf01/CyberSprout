@@ -5,11 +5,15 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-public class Plant {
+import java.util.concurrent.atomic.AtomicInteger;
 
+public class Plant {
     private final Bitmap[] plantImages;
     private final int numImages = 18;
-    private int stage = 0;
+    private final AtomicInteger stage = new AtomicInteger(0);
+    private final AtomicInteger saturation = new AtomicInteger(100);
+    private final AtomicInteger nutrition = new AtomicInteger(100);
+    private final AtomicInteger growth = new AtomicInteger();
     Resources res;
     String packageName;
 
@@ -18,32 +22,10 @@ public class Plant {
         res = context.getResources();
         packageName = context.getPackageName();
         setPlantImages();
-
-        // TODO: handles plant growth > NEED TO ENSURE MUTUAL EXCLUSION
-        Thread growPlant = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (!Thread.currentThread().isInterrupted()) {
-                        Thread.sleep(1000); // Sleep for 2 seconds
-                        stage++;
-                        if (stage == 18) {
-                            stage = 0;
-                        }
-                        // use this if you want to print
-//                        Log.d("UpdateThread", "Stage updated to: " + stage);
-                    }
-                } catch (InterruptedException e) {
-                    // Handle if the thread is interrupted while sleeping
-                    Thread.currentThread().interrupt(); // Restore interrupted status
-                }
-            }
-        });
-        // TODO: ensure that thread terminate gracefully
-        growPlant.start();
     }
 
     // don't touch
+    // Getters and Setters
     public void setPlantImages() {
 
         Bitmap tempBitmap = BitmapFactory.decodeResource(res, R.drawable.plant0);
@@ -59,7 +41,7 @@ public class Plant {
     }
 
     public Bitmap getPlantImage() {
-        return plantImages[stage];
+        return plantImages[stage.get()];
     }
 
     public int getImageWidth() {
@@ -71,7 +53,34 @@ public class Plant {
     }
 
     public int getStage() {
-        return stage;
+        return stage.get();
     }
 
+    public void setStage(int stage) {
+        this.stage.set(stage);
+    }
+
+    public void setSaturation(int saturation) {
+        this.saturation.set(saturation);
+    }
+
+    public void setNutrition(int nutrition) {
+        this.nutrition.set(nutrition);
+    }
+
+    public void setGrowth(int growth) {
+        this.growth.set(growth);
+    }
+
+    public int getSaturation() {
+        return saturation.get();
+    }
+
+    public int getNutrition() {
+        return nutrition.get();
+    }
+
+    public int getGrowth() {
+        return growth.get();
+    }
 }

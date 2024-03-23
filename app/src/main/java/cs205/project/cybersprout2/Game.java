@@ -43,6 +43,9 @@ public class Game {
         this.context = context;
         this.useCanvas = useCanvas;
         plant = new Plant(context);
+        // TODO: handles plant growth > NEED TO ENSURE MUTUAL EXCLUSION
+        new Thread(new PlantManager(plant), "plantManager").start();
+        // TODO: ensure that thread terminate gracefully
     }
 
     public void handleTouch(int pointerId, float x, float y, boolean isDown) {
