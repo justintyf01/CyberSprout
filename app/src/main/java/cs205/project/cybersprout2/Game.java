@@ -31,9 +31,7 @@ public class Game {
     // this variable allows use to
     private final Predicate<Consumer<Canvas>> useCanvas;
     private final Plant plant;
-    private int stage = 0;
     private final ElapsedTimer elapsedTimer = new ElapsedTimer();
-    private long totalElapsedTime = 0;
 //    private List<WateringCan> wateringCanList = new ArrayList<>();
     Context context;
     private Map<Integer, WateringCan> activeTouches = new HashMap<>();
