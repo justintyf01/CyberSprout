@@ -17,10 +17,13 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class Game {
 
     // use this to send notifications -> send in notification method from GameView
-//    private final Runnable runnable;
+    // private final Runnable runnable;
 
     // this Canvas is a method from GameView, since GameView extends SurfaceHolder
     // this variable allows use to
@@ -32,7 +35,7 @@ public class Game {
     private List<WateringCan> wateringCanList = new ArrayList<>();
     Context context;
     private Map<Integer, WateringCan> activeTouches = new HashMap<>();
-
+    private ExecutorService executorService;
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
         // add this to the parameter if implementing notifications
@@ -40,7 +43,12 @@ public class Game {
         this.context = context;
         this.useCanvas = useCanvas;
         plant = new Plant(context);
+
+        // Initialize the ExecutorService with a fixed number of threads
+        // You might want to choose the number of threads based on the number of available processors
+        executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
+
     public void handleTouch(int pointerId, float x, float y, boolean isDown) {
         if (isDown) {
             // If the touch is down, add or update the touch point
@@ -65,6 +73,7 @@ public class Game {
 //
 //        }
 //    }
+
     public boolean click(MotionEvent event) {
         int action = event.getActionMasked(); // Get the type of action
         int index = event.getActionIndex(); // Get the index of the pointer associated with the action
@@ -121,6 +130,7 @@ public class Game {
 //            canvas.drawColor(Color.GRAY);
 //        }
 //
+
         Bitmap[] plantImages = plant.getPlantImages();
         Bitmap plantImage = plantImages[0];
         int bitmapWidth = plantImage.getWidth();
@@ -149,10 +159,28 @@ public class Game {
 //            stage = newStage;
 //            // Here, you can also do whatever you need to do when stage increases.
 //        }
+
         stage++;
         if (stage == 18) {
             stage = 0;
         }
+    }
+
+    public void waterPlant() {
+        // Set state to watering
+        // Start animation for the water effect
+        // Update plant's growth if necessary
+    }
+
+    // Call this method when you want to perform background tasks such as loading resources, 
+    // without blocking the UI thread.
+    public void performBackgroundTask(Runnable task) {
+        executorService.execute(task);
+    }
+    
+    // Call this method when the game is closing or you no longer need the ExecutorService
+    public void shutdown() {
+        executorService.shutdownNow();
     }
 
 }

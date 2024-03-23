@@ -23,7 +23,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     private final SurfaceHolder surfaceHolder;
 
-//    private final Bitmap[] plantBitmap;
+    // private final Bitmap[] plantBitmap;
 
     @SuppressLint("ClickableViewAccessibility")
     public GameView(Context context) {
@@ -37,10 +37,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         // set this view in focus
         setFocusable(View.FOCUSABLE);
 
-//        setOnTouchListener((view, event) -> {
-//            game.click(event);
-//            return true;
-//        });
+        // setOnTouchListener((view, event) -> {
+        // game.click(event);
+        // return true;
+        // });
         setOnTouchListener((view, event) -> {
             int action = event.getActionMasked();
             int index = event.getActionIndex();
@@ -69,7 +69,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         });
     }
 
-    // this method returns true to the Game class if the canvas it sent over was successfully drawn
+    // this method returns true to the Game class if the canvas it sent over was
+    // successfully drawn
     private boolean useCanvas(final Consumer<Canvas> onDraw) {
         boolean result = false;
         try {
@@ -101,9 +102,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         gameThread.startGame();
 
         // TODO: remove, used for initial testing
-//        Canvas canvas = surfaceHolder.lockCanvas();
-//        myDraw(canvas);
-//        surfaceHolder.unlockCanvasAndPost(canvas);
+        // Canvas canvas = surfaceHolder.lockCanvas();
+        // myDraw(canvas);
+        // surfaceHolder.unlockCanvasAndPost(canvas);
     }
 
     @Override
@@ -114,13 +115,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         // stop the thread
-//        gameThread.stopGame();
-//        try {
-//            // ensure it terminates gracefully
-//            gameThread.join();
-//        } catch (InterruptedException e) {
-//            System.out.println(e.getMessage());
-//        }
+        // gameThread.stopGame();
+        // try {
+        // // ensure it terminates gracefully
+        // gameThread.join();
+        // } catch (InterruptedException e) {
+        // System.out.println(e.getMessage());
+        // }
+
+        // To shutdown executor service
+        game.shutdown();
     }
 
     @Override
@@ -134,14 +138,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         game.draw();
     }
 
-//    public void myDraw(Canvas canvas) {
-//        canvas.drawColor(Color.WHITE);
-//
-//        Paint paint = new Paint();
-//        paint.setColor(Color.YELLOW);
-//        paint.setStyle(Paint.Style.FILL);
-//        paint.setTextSize(50);
-//        canvas.drawText("HeLOOOOOO", 150, 150, paint);
-//    }
-
+    // public void myDraw(Canvas canvas) {
+    // canvas.drawColor(Color.WHITE);
+    //
+    // Paint paint = new Paint();
+    // paint.setColor(Color.YELLOW);
+    // paint.setStyle(Paint.Style.FILL);
+    // paint.setTextSize(50);
+    // canvas.drawText("HeLOOOOOO", 150, 150, paint);
+    // }
 }
