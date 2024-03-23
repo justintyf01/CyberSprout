@@ -6,9 +6,14 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -21,23 +26,82 @@ public class Game {
     // this variable allows use to
     private final Predicate<Consumer<Canvas>> useCanvas;
     private final Plant plant;
-    private int stage;
+    private int stage = 0;
+    private final ElapsedTimer elapsedTimer = new ElapsedTimer();
+    private long totalElapsedTime = 0;
+    private List<WateringCan> wateringCanList = new ArrayList<>();
+    Context context;
+    private Map<Integer, WateringCan> activeTouches = new HashMap<>();
 
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
         // add this to the parameter if implementing notifications
 //        this.runnable = runnable;
+        this.context = context;
         this.useCanvas = useCanvas;
         plant = new Plant(context);
-        stage = 1;
+    }
+    public void handleTouch(int pointerId, float x, float y, boolean isDown) {
+        if (isDown) {
+            // If the touch is down, add or update the touch point
+//            activeTouches.put(pointerId, new PointF(x, y));
+            activeTouches.put(pointerId, new WateringCan(context, x, y));
+//            wateringCanList.add(new WateringCan(context, x, y));
+        } else {
+            // If the finger is lifted, remove the touch point
+            activeTouches.remove(pointerId);
+//            wateringCanList.remove()
+        }
+        // Signal that the game state has changed and needs to be redrawn
+        // You might already have a method to signal a redraw or update the game state
     }
 
     // Handle clicks
-    public void click(MotionEvent event) {
-        // TODO: implement logic to spawn watering cans, might require separate thread for this
-        for (int i = 0 ; i < event.getPointerCount() ; i++) {
-            System.out.println("Show watering cans");
+//    public void click(MotionEvent event) {
+//        // TODO: implement logic to spawn watering cans, might require separate thread for this
+//        for (int i = 0 ; i < event.getPointerCount() ; i++) {
+//            float wateringCanX = event.getX();
+//            float wateringCanY = event.getY();
+//
+//        }
+//    }
+    public boolean click(MotionEvent event) {
+        int action = event.getActionMasked(); // Get the type of action
+        int index = event.getActionIndex(); // Get the index of the pointer associated with the action
+        int pointerId = event.getPointerId(index); // Get the ID of the pointer
+
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_POINTER_DOWN: // A non-primary pointer has gone down.
+                // Handle touch down (start tracking the touch)
+                float x = event.getX(index);
+                float y = event.getY(index);
+
+                // Use the pointerId to track this specific touch point
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                // Here, you may want to track movement of all active touch points.
+                // Loop through all active pointers
+                for (int i = 0; i < event.getPointerCount(); i++) {
+                    int id = event.getPointerId(i);
+                    x = event.getX(i);
+                    y = event.getY(i);
+                    // Update your view or model based on the movement of this pointer
+                }
+                break;
+
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP: // A non-primary pointer has gone up.
+                // Handle touch end (stop tracking the touch)
+                // Use the pointerId to stop tracking this specific touch point
+                break;
+
+            case MotionEvent.ACTION_CANCEL:
+                // Handle touch cancel (clear tracking of touches)
+                break;
         }
+        return true; // Indicate we've handled the touch event
     }
 
     public void draw() {
@@ -52,47 +116,43 @@ public class Game {
         if (canvas == null) {
             return;
         }
-//
-//        canvas.drawColor(Color.blue(500));
-//
-//        Paint paint = new Paint();
-//        paint.setColor(Color.RED);
-//        paint.setStyle(Paint.Style.FILL);
-//        paint.setTextSize(50);
-//        canvas.drawText("HeLOOOOOO", 150, 500, paint);
 
-
+//        if (stage == 0) {
+//            canvas.drawColor(Color.GRAY);
+//        }
+//
         Bitmap[] plantImages = plant.getPlantImages();
-
-        // TODO: Add more plant stages
-        Bitmap youngPlant = plantImages[0];
+        Bitmap plantImage = plantImages[0];
+        int bitmapWidth = plantImage.getWidth();
+        int bitmapHeight = plantImage.getHeight();
         // Get screen dimensions
         int screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
         int screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
+        int x = (screenWidth - bitmapWidth) / 2;
+        int y = screenHeight - bitmapHeight;
 
+        canvas.drawColor(Color.GRAY);
+        canvas.drawBitmap(plantImages[stage], x, y, null);
 
-        if (stage == 1) {
-            int bitmapWidth = youngPlant.getWidth();
-            int bitmapHeight = youngPlant.getHeight();
-
-            // Calculate X and Y for positioning
-            int x = (screenWidth - bitmapWidth) / 2;
-            int y = screenHeight - bitmapHeight;
-            canvas.drawBitmap(plantImages[0], x, y, null);
-
-        } else if (stage == 2) {
-            canvas.drawColor(Color.BLACK);
-            Bitmap oldPlant = plantImages[0];
-
-            int bitmapWidth = oldPlant.getWidth();
-            int bitmapHeight = oldPlant.getHeight();
-
-            // Calculate X and Y for positioning
-            int x = (screenWidth - bitmapWidth) / 2;
-            int y = screenHeight - bitmapHeight;
-            canvas.drawBitmap(plantImages[0], x, y, null);
+        for (WateringCan can : activeTouches.values()) {
+            canvas.drawBitmap(can.getWateringCanImage(), can.getX(), can.getY(), null);
         }
 
+    }
+
+
+    public void update() {
+//        totalElapsedTime += elapsedTimer.progress(); // Accumulate total elapsed time
+//        int newStage = (int) (totalElapsedTime / 100000) % 18; // Convert milliseconds to seconds
+//
+//        if (newStage != stage) { // Check if a new second has passed
+//            stage = newStage;
+//            // Here, you can also do whatever you need to do when stage increases.
+//        }
+        stage++;
+        if (stage == 18) {
+            stage = 0;
+        }
     }
 
 }

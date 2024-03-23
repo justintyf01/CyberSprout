@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -40,11 +41,32 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 //            game.click(event);
 //            return true;
 //        });
+        setOnTouchListener((view, event) -> {
+            int action = event.getActionMasked();
+            int index = event.getActionIndex();
+            int pointerId = event.getPointerId(index);
 
-        // Initialise Bitmap
-//        plantBitmap = new Bitmap[1];
-//        plantBitmap[0] = BitmapFactory.decodeResource(getResources(), R.drawable.plant1);
-
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    // Finger went down, tell the Game to add/update a touch point
+                    game.handleTouch(pointerId, event.getX(index), event.getY(index), true);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    // Handle movement for all active touch points
+                    for (int i = 0; i < event.getPointerCount(); i++) {
+                        pointerId = event.getPointerId(i);
+                        game.handleTouch(pointerId, event.getX(i), event.getY(i), true);
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP:
+                    // Finger lifted, tell the Game to remove the touch point
+                    game.handleTouch(pointerId, event.getX(index), event.getY(index), false);
+                    break;
+            }
+            return true;
+        });
     }
 
     // this method returns true to the Game class if the canvas it sent over was successfully drawn

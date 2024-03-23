@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CyberSprout2"
+rootProject.name = "CyberSprout"
 include(":app")
  

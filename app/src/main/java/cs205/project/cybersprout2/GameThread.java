@@ -25,13 +25,14 @@ public class GameThread extends Thread {
         while (isRunning) {
             // draw the plant
             game.draw();
-            System.out.println();
+            game_sleep();
+            game.update();
         }
     }
 
     public void game_sleep() {
         try {
-            sleep(2000);
+            sleep(1000);
         } catch (InterruptedException e) {
             System.out.println(e.getMessage());
         }
