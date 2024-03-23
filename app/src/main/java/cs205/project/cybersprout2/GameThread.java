@@ -25,17 +25,18 @@ public class GameThread extends Thread {
         while (isRunning) {
             // draw the plant
             game.draw();
-            game_sleep();
-            game.update();
+//            game_sleep();
+//            game.update();
         }
     }
 
-    public void game_sleep() {
-        try {
-            sleep(1000);
-        } catch (InterruptedException e) {
-            System.out.println(e.getMessage());
-        }
-    }
+
+//    public void game_sleep() {
+//        try {
+//            sleep(1000);
+//        } catch (InterruptedException e) {
+//            System.out.println(e.getMessage());
+//        }
+//    }
 
 }

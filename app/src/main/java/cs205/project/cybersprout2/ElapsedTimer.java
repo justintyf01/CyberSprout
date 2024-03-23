@@ -16,8 +16,8 @@ public class ElapsedTimer {
             initialized = true;
             startTime = now;
         }
-        final long delta = now - startTime;
+        return now - startTime;
 //        updateStartTime = now;
-        return delta;
+//        return delta;
     }
 }

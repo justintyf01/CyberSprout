@@ -2,6 +2,7 @@ package cs205.project.cybersprout2;
 
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
+import android.view.WindowManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +31,7 @@ public class Game {
     private int stage = 0;
     private final ElapsedTimer elapsedTimer = new ElapsedTimer();
     private long totalElapsedTime = 0;
-    private List<WateringCan> wateringCanList = new ArrayList<>();
+//    private List<WateringCan> wateringCanList = new ArrayList<>();
     Context context;
     private Map<Integer, WateringCan> activeTouches = new HashMap<>();
 
@@ -40,31 +42,19 @@ public class Game {
         this.context = context;
         this.useCanvas = useCanvas;
         plant = new Plant(context);
+
     }
+
     public void handleTouch(int pointerId, float x, float y, boolean isDown) {
         if (isDown) {
-            // If the touch is down, add or update the touch point
 //            activeTouches.put(pointerId, new PointF(x, y));
             activeTouches.put(pointerId, new WateringCan(context, x, y));
-//            wateringCanList.add(new WateringCan(context, x, y));
         } else {
             // If the finger is lifted, remove the touch point
             activeTouches.remove(pointerId);
-//            wateringCanList.remove()
         }
-        // Signal that the game state has changed and needs to be redrawn
-        // You might already have a method to signal a redraw or update the game state
     }
 
-    // Handle clicks
-//    public void click(MotionEvent event) {
-//        // TODO: implement logic to spawn watering cans, might require separate thread for this
-//        for (int i = 0 ; i < event.getPointerCount() ; i++) {
-//            float wateringCanX = event.getX();
-//            float wateringCanY = event.getY();
-//
-//        }
-//    }
     public boolean click(MotionEvent event) {
         int action = event.getActionMasked(); // Get the type of action
         int index = event.getActionIndex(); // Get the index of the pointer associated with the action
@@ -106,7 +96,6 @@ public class Game {
 
     public void draw() {
         if (useCanvas.test(this::draw)) {
-            // can handle other types of metrics here
             System.out.println("Draw was successful");
         }
     }
@@ -117,42 +106,29 @@ public class Game {
             return;
         }
 
-//        if (stage == 0) {
-//            canvas.drawColor(Color.GRAY);
-//        }
-//
-        Bitmap[] plantImages = plant.getPlantImages();
-        Bitmap plantImage = plantImages[0];
-        int bitmapWidth = plantImage.getWidth();
-        int bitmapHeight = plantImage.getHeight();
-        // Get screen dimensions
-        int screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
-        int screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
-        int x = (screenWidth - bitmapWidth) / 2;
-        int y = screenHeight - bitmapHeight;
-
         canvas.drawColor(Color.GRAY);
-        canvas.drawBitmap(plantImages[stage], x, y, null);
-
         for (WateringCan can : activeTouches.values()) {
             canvas.drawBitmap(can.getWateringCanImage(), can.getX(), can.getY(), null);
         }
 
+        plantDraw(canvas);
+    }
+
+    public void plantDraw(Canvas canvas) {
+        float screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
+        float screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
+        int bitmapWidth = plant.getImageWidth();
+        int bitmapHeight = plant.getImageHeight();
+
+        float x = (screenWidth - bitmapWidth) / 2;
+        float y = screenHeight - bitmapHeight;
+        canvas.drawBitmap(plant.getPlantImage(), x, y, null);
+    }
+
+    public Plant getPlant() {
+        return plant;
     }
 
 
-    public void update() {
-//        totalElapsedTime += elapsedTimer.progress(); // Accumulate total elapsed time
-//        int newStage = (int) (totalElapsedTime / 100000) % 18; // Convert milliseconds to seconds
-//
-//        if (newStage != stage) { // Check if a new second has passed
-//            stage = newStage;
-//            // Here, you can also do whatever you need to do when stage increases.
-//        }
-        stage++;
-        if (stage == 18) {
-            stage = 0;
-        }
-    }
 
 }
