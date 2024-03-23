@@ -56,55 +56,6 @@ public class Game {
             activeTouches.remove(pointerId);
         }
     }
-
-    // Handle clicks
-//    public void click(MotionEvent event) {
-//        // TODO: implement logic to spawn watering cans, might require separate thread for this
-//        for (int i = 0 ; i < event.getPointerCount() ; i++) {
-//            float wateringCanX = event.getX();
-//            float wateringCanY = event.getY();
-//
-//        }
-//    }
-    public boolean click(MotionEvent event) {
-        int action = event.getActionMasked(); // Get the type of action
-        int index = event.getActionIndex(); // Get the index of the pointer associated with the action
-        int pointerId = event.getPointerId(index); // Get the ID of the pointer
-
-        switch (action) {
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_POINTER_DOWN: // A non-primary pointer has gone down.
-                // Handle touch down (start tracking the touch)
-                float x = event.getX(index);
-                float y = event.getY(index);
-
-                // Use the pointerId to track this specific touch point
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-                // Here, you may want to track movement of all active touch points.
-                // Loop through all active pointers
-                for (int i = 0; i < event.getPointerCount(); i++) {
-                    int id = event.getPointerId(i);
-                    x = event.getX(i);
-                    y = event.getY(i);
-                    // Update your view or model based on the movement of this pointer
-                }
-                break;
-
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_POINTER_UP: // A non-primary pointer has gone up.
-                // Handle touch end (stop tracking the touch)
-                // Use the pointerId to stop tracking this specific touch point
-                break;
-
-            case MotionEvent.ACTION_CANCEL:
-                // Handle touch cancel (clear tracking of touches)
-                break;
-        }
-        return true; // Indicate we've handled the touch event
-    }
-
     public void draw() {
         if (useCanvas.test(this::draw)) {
             System.out.println("Draw was successful");
@@ -116,20 +67,6 @@ public class Game {
         if (canvas == null) {
             return;
         }
-
-//        if (stage == 0) {
-//            canvas.drawColor(Color.GRAY);
-//        }
-//
-        Bitmap[] plantImages = plant.getPlantImages();
-        Bitmap plantImage = plantImages[0];
-        int bitmapWidth = plantImage.getWidth();
-        int bitmapHeight = plantImage.getHeight();
-        // Get screen dimensions
-        int screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
-        int screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
-        int x = (screenWidth - bitmapWidth) / 2;
-        int y = screenHeight - bitmapHeight;
 
         canvas.drawColor(Color.GRAY);
         for (WateringCan can : activeTouches.values()) {
@@ -144,22 +81,11 @@ public class Game {
         float screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
         int bitmapWidth = plant.getImageWidth();
         int bitmapHeight = plant.getImageHeight();
+        float x = (screenWidth - bitmapWidth) / 2;
+        float y = screenHeight - bitmapHeight;
 
-    public void update() {
-//        totalElapsedTime += elapsedTimer.progress(); // Accumulate total elapsed time
-//        int newStage = (int) (totalElapsedTime / 100000) % 18; // Convert milliseconds to seconds
-//
-//        if (newStage != stage) { // Check if a new second has passed
-//            stage = newStage;
-//            // Here, you can also do whatever you need to do when stage increases.
-//        }
-        stage++;
-        if (stage == 18) {
-            stage = 0;
-        }
+        canvas.drawBitmap(plant.getPlantImage(), x, y, null);
     }
-
-
 
     public void waterPlant() {
         // Set state to watering
