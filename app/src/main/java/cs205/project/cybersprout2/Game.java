@@ -19,10 +19,13 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class Game {
 
     // use this to send notifications -> send in notification method from GameView
-//    private final Runnable runnable;
+    // private final Runnable runnable;
 
     // this Canvas is a method from GameView, since GameView extends SurfaceHolder
     // this variable allows use to
@@ -34,7 +37,7 @@ public class Game {
 //    private List<WateringCan> wateringCanList = new ArrayList<>();
     Context context;
     private Map<Integer, WateringCan> activeTouches = new HashMap<>();
-
+    private ExecutorService executorService;
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
         // add this to the parameter if implementing notifications
@@ -42,7 +45,6 @@ public class Game {
         this.context = context;
         this.useCanvas = useCanvas;
         plant = new Plant(context);
-
     }
 
     public void handleTouch(int pointerId, float x, float y, boolean isDown) {
@@ -55,6 +57,15 @@ public class Game {
         }
     }
 
+    // Handle clicks
+//    public void click(MotionEvent event) {
+//        // TODO: implement logic to spawn watering cans, might require separate thread for this
+//        for (int i = 0 ; i < event.getPointerCount() ; i++) {
+//            float wateringCanX = event.getX();
+//            float wateringCanY = event.getY();
+//
+//        }
+//    }
     public boolean click(MotionEvent event) {
         int action = event.getActionMasked(); // Get the type of action
         int index = event.getActionIndex(); // Get the index of the pointer associated with the action
@@ -106,6 +117,20 @@ public class Game {
             return;
         }
 
+//        if (stage == 0) {
+//            canvas.drawColor(Color.GRAY);
+//        }
+//
+        Bitmap[] plantImages = plant.getPlantImages();
+        Bitmap plantImage = plantImages[0];
+        int bitmapWidth = plantImage.getWidth();
+        int bitmapHeight = plantImage.getHeight();
+        // Get screen dimensions
+        int screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
+        int screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
+        int x = (screenWidth - bitmapWidth) / 2;
+        int y = screenHeight - bitmapHeight;
+
         canvas.drawColor(Color.GRAY);
         for (WateringCan can : activeTouches.values()) {
             canvas.drawBitmap(can.getWateringCanImage(), can.getX(), can.getY(), null);
@@ -120,15 +145,37 @@ public class Game {
         int bitmapWidth = plant.getImageWidth();
         int bitmapHeight = plant.getImageHeight();
 
-        float x = (screenWidth - bitmapWidth) / 2;
-        float y = screenHeight - bitmapHeight;
-        canvas.drawBitmap(plant.getPlantImage(), x, y, null);
+    public void update() {
+//        totalElapsedTime += elapsedTimer.progress(); // Accumulate total elapsed time
+//        int newStage = (int) (totalElapsedTime / 100000) % 18; // Convert milliseconds to seconds
+//
+//        if (newStage != stage) { // Check if a new second has passed
+//            stage = newStage;
+//            // Here, you can also do whatever you need to do when stage increases.
+//        }
+        stage++;
+        if (stage == 18) {
+            stage = 0;
+        }
     }
 
-    public Plant getPlant() {
-        return plant;
+
+
+    public void waterPlant() {
+        // Set state to watering
+        // Start animation for the water effect
+        // Update plant's growth if necessary
     }
 
+    // Call this method when you want to perform background tasks such as loading resources,
+    // without blocking the UI thread.
+    public void performBackgroundTask(Runnable task) {
+        executorService.execute(task);
+    }
 
+    // Call this method when the game is closing or you no longer need the ExecutorService
+    public void shutdown() {
+        executorService.shutdownNow();
+    }
 
 }
