@@ -10,14 +10,17 @@ public class WateringCan {
 
     private final float x;
     private final float y;
-    private Bitmap wateringCanImage;
-    private Resources res;
+    private final Bitmap wateringCanImage;
+
+    // private BackgroundTaskThreadPool threadPool = BackgroundTaskThreadPool.getThreadPool();
+
     public WateringCan(Context context, float x, float y) {
-        res = context.getResources();
+        Resources res = context.getResources();
 
         Bitmap originalBitmap = BitmapFactory.decodeResource(res, R.drawable.wateringcan);
-        this.x = x - (int)originalBitmap.getWidth();
-        this.y = y - (int)originalBitmap.getHeight();
+        float originalHeight = originalBitmap.getHeight();
+        this.x = x - originalBitmap.getWidth();
+        this.y = y - originalHeight;
         Matrix matrix = new Matrix();
         matrix.postRotate(-45); // Rotate 45 degrees to the left
         wateringCanImage = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.getWidth(), originalBitmap.getHeight(), matrix, true);

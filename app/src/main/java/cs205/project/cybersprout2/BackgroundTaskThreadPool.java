@@ -12,7 +12,7 @@ public class BackgroundTaskThreadPool {
         pool = Executors.newFixedThreadPool(cpuCores);
     }
 
-    public BackgroundTaskThreadPool getThreadPool() {
+    public static BackgroundTaskThreadPool getThreadPool() {
         return backgroundTaskThreadPool;
     }
 

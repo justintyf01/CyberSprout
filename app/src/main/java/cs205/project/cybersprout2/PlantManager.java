@@ -21,7 +21,7 @@ public class PlantManager implements Runnable {
                 int growth = plant.getGrowth();
                 int saturation = plant.getSaturation();
                 int nutrition = plant.getNutrition();
-                System.out.printf("growth = %d, saturation = %d. nutrition = %d", growth, saturation, nutrition);
+//                System.out.printf("growth = %d, saturation = %d. nutrition = %d", growth, saturation, nutrition);
 
                 // every 5 secs decrease nutrition and saturation
                 if (counter % 50 == 0) {

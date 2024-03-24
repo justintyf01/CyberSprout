@@ -2,20 +2,15 @@ package cs205.project.cybersprout2;
 
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PointF;
-import android.util.DisplayMetrics;
-import android.view.MotionEvent;
-import android.view.WindowManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -23,19 +18,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Game {
-
-    // use this to send notifications -> send in notification method from GameView
-    // private final Runnable runnable;
-
-    // this Canvas is a method from GameView, since GameView extends SurfaceHolder
-    // this variable allows use to
     private final Predicate<Consumer<Canvas>> useCanvas;
     private final Plant plant;
-    private final ElapsedTimer elapsedTimer = new ElapsedTimer();
-//    private List<WateringCan> wateringCanList = new ArrayList<>();
     Context context;
-    private Map<Integer, WateringCan> activeTouches = new HashMap<>();
-    private ExecutorService executorService;
+    private final Map<Integer, WateringCan> activeTouches = new HashMap<>();
+    private WateringCan wateringCan;
+    private final List<Droplet> droplets = new ArrayList<>();
+    private final ReentrantLock dropletLock = new ReentrantLock();
+    private final ExecutorService executorService;
+    // private BackgroundTaskThreadPool threadPool = BackgroundTaskThreadPool.getThreadPool();
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
         // add this to the parameter if implementing notifications
@@ -43,6 +34,8 @@ public class Game {
         this.context = context;
         this.useCanvas = useCanvas;
         plant = new Plant(context);
+        this.executorService = Executors.newFixedThreadPool(5);
+
         // TODO: handles plant growth > NEED TO ENSURE MUTUAL EXCLUSION
         new Thread(new PlantManager(plant), "plantManager").start();
         // TODO: ensure that thread terminate gracefully
@@ -51,10 +44,34 @@ public class Game {
     public void handleTouch(int pointerId, float x, float y, boolean isDown) {
         if (isDown) {
 //            activeTouches.put(pointerId, new PointF(x, y));
-            activeTouches.put(pointerId, new WateringCan(context, x, y));
+            this.wateringCan = new WateringCan(context, x, y);
+            activeTouches.put(pointerId, wateringCan);
+
+            executorService.execute(() -> {
+                while (activeTouches.get(pointerId) != null) {
+                    dropletLock.lock();
+                    try {
+                        float dropletX = wateringCan.getX()+100;
+                        float dropletY = wateringCan.getY()+425;
+                        droplets.add(new Droplet(context, dropletX, dropletY));
+                        droplets.add(new Droplet(context, dropletX, dropletY));
+                        droplets.add(new Droplet(context, dropletX, dropletY));
+                    } finally {
+                        dropletLock.unlock();
+                    }
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
         } else {
             // If the finger is lifted, remove the touch point
             activeTouches.remove(pointerId);
+            wateringCan = null;
+//            wateringCan.endThread();
         }
     }
     public void draw() {
@@ -68,11 +85,22 @@ public class Game {
         if (canvas == null) {
             return;
         }
-
         canvas.drawColor(Color.GRAY);
         for (WateringCan can : activeTouches.values()) {
             canvas.drawBitmap(can.getWateringCanImage(), can.getX(), can.getY(), null);
         }
+        dropletLock.lock();
+        if (!droplets.isEmpty()) {
+            Iterator<Droplet> dropletIterator = droplets.iterator();
+            while (dropletIterator.hasNext()) {
+                Droplet d = dropletIterator.next();
+                canvas.drawBitmap(d.getDropletImage(), d.getX(), d.getY(), null);
+                if (!d.updateDroplet(10)) {
+                    dropletIterator.remove();
+                }
+            }
+        }
+        dropletLock.unlock();
 
         plantDraw(canvas);
     }
@@ -88,11 +116,6 @@ public class Game {
         canvas.drawBitmap(plant.getPlantImage(), x, y, null);
     }
 
-    public void waterPlant() {
-        // Set state to watering
-        // Start animation for the water effect
-        // Update plant's growth if necessary
-    }
 
     // Call this method when you want to perform background tasks such as loading resources,
     // without blocking the UI thread.

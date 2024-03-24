@@ -15,21 +15,15 @@ public class GameThread extends Thread {
         start();
     }
 
-    public void stopGame() {
-        isRunning = false;
-    }
-
     @Override
     public void run() {
-        super.run();
+
         while (isRunning) {
             // draw the plant
             game.draw();
-//            game_sleep();
 //            game.update();
         }
     }
-
 
 //    public void game_sleep() {
 //        try {
