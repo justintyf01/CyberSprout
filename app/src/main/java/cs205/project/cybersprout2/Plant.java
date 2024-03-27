@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Plant {
     private final Bitmap[] plantImages;
-    private final int numImages = 18;
+    private final int numImages = 7;
     private final AtomicInteger stage = new AtomicInteger(0);
     private final AtomicInteger saturation = new AtomicInteger(100);
     private final AtomicInteger nutrition = new AtomicInteger(100);
@@ -28,14 +28,10 @@ public class Plant {
     // Getters and Setters
     public void setPlantImages() {
 
-        Bitmap tempBitmap = BitmapFactory.decodeResource(res, R.drawable.plant0);
-        int newWidth = tempBitmap.getWidth() * 8;
-        int newHeight = tempBitmap.getHeight() * 8;
-
         for (int i = 0 ; i < numImages ; i++) {
             int resourceId = res.getIdentifier("plant" + i, "drawable", packageName);
             if (resourceId != 0) { // 0 means resource was not found
-                plantImages[i] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(res, resourceId), newWidth, newHeight, true);
+                plantImages[i] = BitmapFactory.decodeResource(res, resourceId);
             }
         }
     }

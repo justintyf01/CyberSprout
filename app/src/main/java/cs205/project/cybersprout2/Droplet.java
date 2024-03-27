@@ -16,8 +16,9 @@ public class Droplet {
         this.x = randomX(x);
         this.y = y;
     }
-    public boolean updateDroplet(float velocity) {
-        this.y += velocity;
+    public boolean updateDroplet() {
+        Random dice = new Random();
+        this.y += 25 + (50 - 25) * dice.nextFloat();
         return !(this.y <= 0);
     }
     public float getY() {

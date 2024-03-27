@@ -34,7 +34,7 @@ public class Game {
         this.context = context;
         this.useCanvas = useCanvas;
         plant = new Plant(context);
-        this.executorService = Executors.newFixedThreadPool(5);
+        this.executorService = Executors.newFixedThreadPool(3);
 
         // TODO: handles plant growth > NEED TO ENSURE MUTUAL EXCLUSION
         new Thread(new PlantManager(plant), "plantManager").start();
@@ -49,6 +49,7 @@ public class Game {
 
             executorService.execute(() -> {
                 while (activeTouches.get(pointerId) != null) {
+                    plant.setSaturation(plant.getSaturation() + 1);
                     dropletLock.lock();
                     try {
                         float dropletX = wateringCan.getX()+100;
@@ -76,6 +77,7 @@ public class Game {
     }
     public void draw() {
         if (useCanvas.test(this::draw)) {
+            // Can implement framerate counter here
             System.out.println("Draw was successful");
         }
     }
@@ -95,7 +97,7 @@ public class Game {
             while (dropletIterator.hasNext()) {
                 Droplet d = dropletIterator.next();
                 canvas.drawBitmap(d.getDropletImage(), d.getX(), d.getY(), null);
-                if (!d.updateDroplet(10)) {
+                if (!d.updateDroplet()) {
                     dropletIterator.remove();
                 }
             }
