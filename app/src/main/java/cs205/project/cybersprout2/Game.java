@@ -24,6 +24,8 @@ import java.util.function.Predicate;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import android.graphics.Paint;
+
 public class Game {
     /************************** SYSTEM **************************/
     private final Context context;
@@ -52,6 +54,14 @@ public class Game {
     private final ExecutorService executorService;
     // private BackgroundTaskThreadPool threadPool = BackgroundTaskThreadPool.getThreadPool();
 
+    /****************** STATUS BAR ******************/
+
+    private final Bitmap growthIcon;
+
+    private final Bitmap nutritionIcon;
+
+    private final Bitmap saturationIcon;
+
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
         // add this to the parameter if implementing notifications
 //        this.runnable = runnable;
@@ -65,6 +75,16 @@ public class Game {
 
         this.sun = BitmapFactory.decodeResource(context.getResources(), R.drawable.sun);
         this.moon = BitmapFactory.decodeResource(context.getResources(), R.drawable.moon);
+
+        int logoSize = 80;
+
+        Bitmap originalGrowthIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.growth_icon);
+        Bitmap originalSaturationIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.saturation_icon);
+        Bitmap originalNutritionIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.nutrition_icon);
+
+        this.growthIcon = Bitmap.createScaledBitmap(originalGrowthIcon, logoSize, logoSize, true);
+        this.saturationIcon = Bitmap.createScaledBitmap(originalSaturationIcon, logoSize, logoSize, true);
+        this.nutritionIcon = Bitmap.createScaledBitmap(originalNutritionIcon, logoSize, logoSize, true);
 
         new Thread(new PlantManager(plant), "plantManager").start();
 
@@ -147,7 +167,7 @@ public class Game {
         dropletLock.unlock();
 
         plantDraw(canvas);
-
+        drawStatusBar(canvas);
 
 //        canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.sun), 0,800
 //                ,null);
@@ -159,7 +179,6 @@ public class Game {
 
     }
 
-
     public void plantDraw(Canvas canvas) {
         float screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
         float screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
@@ -170,6 +189,70 @@ public class Game {
 
         canvas.drawBitmap(plant.getPlantImage(), x, y, null);
     }
+
+    public void drawStatusBar(Canvas canvas) {
+        Paint paint = new Paint();
+        paint.setColor(Color.BLACK); // Text color
+        paint.setTextSize(45); // Text size
+        paint.setAntiAlias(true); // Smooth out the text
+
+        // Define icon size and margins
+        int iconSize = 50; // Size of the icon in pixels
+        int margin = 50; // Margin from the left edge of the screen
+        int statusBarMargin = 30; // Margin from the top edge of the screen
+
+        // Additional vertical shift of the status bar
+        int verticalShift = 1000;
+
+        // Draw background with semi-transparent white color
+        Paint bgPaint = new Paint();
+        bgPaint.setColor(Color.argb(128, 255, 255, 255)); // Semi-transparent white
+        float cornerRadius = 25.0f;
+        int statusBarWidth = 320; // Width of the status bar background
+        int statusBarHeight = 390; // Height of the status bar background
+
+        // Draw the rounded rectangle background with the vertical shift
+        canvas.drawRoundRect(statusBarMargin, statusBarMargin + verticalShift, statusBarWidth, statusBarHeight + statusBarMargin + verticalShift, cornerRadius, cornerRadius, bgPaint);
+
+        // Set up text drawing properties
+        Paint.FontMetrics fontMetrics = paint.getFontMetrics();
+        float textHeight = fontMetrics.descent - fontMetrics.ascent;
+        float verticalTextOffset = (textHeight / 2) - fontMetrics.descent;
+
+        // Calculate the Y position for the text, which is the vertical center of each line
+        float baseLineY = statusBarMargin + verticalShift + verticalTextOffset;
+
+        // Margins for the icons and text within the status bar
+        int innerMargin = 40; // Increase this value as needed for more left padding
+        int marginTopText = 60; // Adjust the top margin for text
+        int marginTopIcon = 55; // Adjust the top margin for icon
+
+        // Adjusted y-coordinates for drawing text and icons
+        float textY = baseLineY + marginTopText;
+        float iconY = baseLineY - (iconSize / 2) - (textHeight / 2) + marginTopIcon;
+
+        // Draw the text and icons with the vertical shift
+        canvas.drawText("% " + plant.getGrowth(), statusBarMargin * 2 + 80 + innerMargin, textY, paint);
+        canvas.drawBitmap(growthIcon, statusBarMargin + innerMargin, iconY, null);
+
+        // Increment the Y position for the next line
+        float lineSpacing = statusBarHeight / 3;
+        textY += lineSpacing;
+        iconY += lineSpacing;
+
+        // Draw the second line of text and its icon
+        canvas.drawText("% " + plant.getSaturation(), statusBarMargin * 2 + 80 + innerMargin, textY, paint);
+        canvas.drawBitmap(saturationIcon, statusBarMargin + innerMargin, iconY, null);
+
+        // Increment the Y position for the next line
+        textY += lineSpacing;
+        iconY += lineSpacing;
+
+        // Draw the third line of text and its icon
+        canvas.drawText("% " + plant.getNutrition(), statusBarMargin * 2 + 80 + innerMargin, textY, paint);
+        canvas.drawBitmap(nutritionIcon, statusBarMargin + innerMargin, iconY, null);
+    }
+
 
 
 
