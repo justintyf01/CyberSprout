@@ -6,16 +6,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -128,7 +124,7 @@ public class Game {
         this.isSun = isSun;
     }
 
-    public void handleTouch(int pointerId, float x, float y, boolean isDown) {
+    public void handleWateringCanTouch(int pointerId, float x, float y, boolean isDown) {
         if (isDown) {
 //            activeTouches.put(pointerId, new PointF(x, y));
             this.wateringCan = new WateringCan(context, x, y);
@@ -136,8 +132,9 @@ public class Game {
 
             executorService.execute(() -> {
                 while (activeTouches.get(pointerId) != null) {
-                    if (wateringCan != null) { // Add this check
-                        plant.setSaturation(plant.getSaturation() + 1);
+                    if (wateringCan != null) {
+                        int plantSaturation = plant.getSaturation();
+                        plant.setSaturation(plantSaturation == 100 ? 100 : plantSaturation + 1);
                         dropletLock.lock();
                         try {
                             float dropletX = wateringCan.getX() + 100; // This line was causing the crash
@@ -155,7 +152,6 @@ public class Game {
                     }
                 }
             });
-
         } else {
             // If the finger is lifted, remove the touch point
             activeTouches.remove(pointerId);
@@ -163,6 +159,8 @@ public class Game {
 //            wateringCan.endThread();
         }
     }
+
+
     public void draw() {
         if (useCanvas.test(this::draw)) {
             // Can implement framerate counter here
@@ -177,6 +175,7 @@ public class Game {
             return;
         }
         canvas.drawBitmap(background.getBg(), 0,0,null);
+        canvas.drawBitmap(background.getBody(), background.getBodyX(), background.getBodyY(), null);
 //        canvas.drawColor(currentColor.get());
 //        canvas.drawColor(Color.GRAY);
         for (WateringCan can : activeTouches.values()) {

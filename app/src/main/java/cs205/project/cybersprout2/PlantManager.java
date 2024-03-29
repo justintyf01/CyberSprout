@@ -47,7 +47,7 @@ public class PlantManager implements Runnable {
                 }
 
                 counter++;
-                Thread.sleep(100); // Sleep for 0.1 seconds
+                Thread.sleep(500); // Sleep for 0.1 seconds
             }
 
         } catch (InterruptedException e) {

@@ -2,11 +2,7 @@ package cs205.project.cybersprout2;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -15,8 +11,8 @@ import android.os.Handler;
 
 import androidx.annotation.NonNull;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.List;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
@@ -34,6 +30,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
     };
     private final SurfaceHolder surfaceHolder;
+    final AtomicBoolean isRightSideTouchActive = new AtomicBoolean(false);
+
     private final int FRAME_RATE = 1000 / 60; // For 60 FPS
     private Handler handler = new Handler();
 
@@ -60,30 +58,43 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 //        });
         setOnTouchListener((view, event) -> {
             int action = event.getActionMasked();
-            int index = event.getActionIndex();
-            int pointerId = event.getPointerId(index);
+            float x = event.getX();
+            float y = event.getY();
+
+            // Determine if the touch event is on the left or right half of the screen
+            boolean isRightSide = x > getWidth() / 2;
 
             switch (action) {
                 case MotionEvent.ACTION_DOWN:
-                case MotionEvent.ACTION_POINTER_DOWN:
-                    // Finger went down, tell the Game to add/update a touch point
-                    game.handleTouch(pointerId, event.getX(index), event.getY(index), true);
+                    if (isRightSide && !isRightSideTouchActive.get()) {
+                        // No active touch on the right side yet, handle this touch
+                        game.handleWateringCanTouch(event.getPointerId(0), x, y, true);
+                        isRightSideTouchActive.set(true);
+                    } else if (!isRightSide) {
+                        // Handle left side touch if needed, assuming no concurrent right-side touch needs to be ignored
+                    }
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    // Handle movement for all active touch points
-                    for (int i = 0; i < event.getPointerCount(); i++) {
-                        pointerId = event.getPointerId(i);
-                        game.handleTouch(pointerId, event.getX(i), event.getY(i), true);
+                    // Optionally handle movement if necessary
+                    if (isRightSideTouchActive.get()) {
+                        // Assuming you want to track movement only for the right side active touch
+                        game.handleWateringCanTouch(event.getPointerId(0), x, y, true);
+                    } else {
+
                     }
                     break;
                 case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_POINTER_UP:
-                    // Finger lifted, tell the Game to remove the touch point
-                    game.handleTouch(pointerId, event.getX(index), event.getY(index), false);
+                case MotionEvent.ACTION_CANCEL: // Consider ACTION_CANCEL to handle interruptions
+                    if (isRightSideTouchActive.get()) {
+                        // End the right side touch
+                        game.handleWateringCanTouch(event.getPointerId(0), x, y, false);
+                        isRightSideTouchActive.set(false);
+                    }
                     break;
             }
             return true;
         });
+
     }
 
     // this method returns true to the Game class if the canvas it sent over was successfully drawn

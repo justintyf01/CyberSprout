@@ -10,6 +10,33 @@ public class Background {
     private final int screenWidth;
     private Bitmap sun;
     private Bitmap moon;
+    private float bodyX;
+    private float bodyY;
+    private boolean isDay = true;
+
+    public float getBodyX() {
+        return bodyX;
+    }
+
+    public void setBodyX(float bodyX) {
+        this.bodyX = bodyX;
+    }
+
+    public float getBodyY() {
+        return bodyY;
+    }
+
+    public void setBodyY(float bodyY) {
+        this.bodyY = bodyY;
+    }
+
+    public boolean isDay() {
+        return isDay;
+    }
+
+    public void setDay(boolean day) {
+        isDay = day;
+    }
 
     public Background(Context context, int screenWidth, int screenHeight) {
         this.bg = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
@@ -18,6 +45,9 @@ public class Background {
 
         this.sun = BitmapFactory.decodeResource(context.getResources(), R.drawable.sun);
         this.moon = BitmapFactory.decodeResource(context.getResources(), R.drawable.moon);
+
+        this.bodyX = screenWidth;
+        this.bodyY = (float) screenHeight / 2;
     }
 
     public Bitmap getBg() {
@@ -36,11 +66,15 @@ public class Background {
         return screenWidth;
     }
 
-    public Bitmap getSun() {
-        return sun;
-    }
+//    public Bitmap getSun() {
+//        return sun;
+//    }
+//
+//    public Bitmap getMoon() {
+//        return moon;
+//    }
 
-    public Bitmap getMoon() {
-        return moon;
+    public Bitmap getBody() {
+        return isDay ? sun : moon;
     }
 }

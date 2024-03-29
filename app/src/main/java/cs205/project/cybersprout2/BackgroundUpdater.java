@@ -9,19 +9,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class BackgroundUpdater implements Runnable {
     private final Background background;
-    private final long[] phaseDurations = {15000, 7500, 15000, 15000, 7500}; // Duration for each phase
+    private final long[] phaseDurations = {15000, 15000, 7500, 15000, 15000, 7500}; // Duration for each phase
     private final int[] colors = { // color of each phase
+            Color.parseColor("#FF4500"), // sunrise
             Color.parseColor("#87CEEB"), // day (lightblue)
             Color.parseColor("#FF4500"), // sunset/sunrise (orange red)
             Color.parseColor("#00008B"), // night (darkblue)
             Color.parseColor("#000000"), // midnight (black)
-            Color.parseColor("#FF4500")
+            Color.parseColor("#00008B") // night
     };
-    private float x = 0, y = 0;
+//    private float x = 0, y = 0;
     private long startTime;
     private final int screenHeight;
     private final int screenWidth;
-//    private final Context context;
+    private float bodyX;
+    private float bodyY;
+    private boolean isDay = true;
+    private long dayTime;
 
 
     public BackgroundUpdater(Background background) {
@@ -32,64 +36,94 @@ public class BackgroundUpdater implements Runnable {
         this.screenWidth = background.getScreenWidth();
         this.screenHeight = background.getScreenHeight();
 
+        bodyX = screenWidth;
+        bodyY = (float) screenHeight / 2;
+
+        dayTime = phaseDurations[0] + phaseDurations[1] + phaseDurations[2];
+
     }
 
     @Override
     public void run() {
+        long bodyStartTime = System.currentTimeMillis();
         while (true) { // Ensure continuous update
-            long currentTime = System.currentTimeMillis() - startTime;
-            long totalPhaseDuration = getTotalPhaseDuration();
-            long currentPhaseTime = currentTime % totalPhaseDuration;
 
-            // Calculate the current phase based on the elapsed time
-            int phase = 0;
-            long timeSum = 0;
-            for (int i = 0; i < phaseDurations.length; i++) {
-                timeSum += phaseDurations[i];
-                if (currentPhaseTime < timeSum) {
-                    phase = i;
-                    break;
-                }
+            // get progress = elapsed time / 37500
+            // bodyX starts from screenWidth
+            // from start to 18750, need to move screenWidth + bitmapWidth = totalLength
+            // bodyX = screenWidth - progress * totalLength
+            double bodyProgress = (double) (System.currentTimeMillis() - bodyStartTime) / dayTime;
+            int totalLength = background.getBody().getWidth() + screenWidth;
+            bodyX = (float) (screenWidth - bodyProgress * totalLength);
+            background.setBodyX(bodyX);
+            bodyY = calculateParabolicY(bodyX, screenHeight, screenWidth - background.getBody().getWidth());
+            System.out.println(bodyY);
+            background.setBodyY(bodyY);
+
+            if (bodyProgress > 1) {
+                bodyStartTime = System.currentTimeMillis();
+                background.setDay(!isDay);
+                isDay = !isDay;
             }
 
-            // Calculate progress
-            long phaseStartTime = timeSum - phaseDurations[phase];
-            float phaseProgress = (currentPhaseTime - phaseStartTime) / (float) phaseDurations[phase];
 
-            // Handle looping of phases
-            int startColor = colors[phase];
-            int endColor;
-            if (phase == colors.length - 1) {
-                endColor = colors[0];
-            } else {
-                endColor = colors[phase + 1];
-            }
 
-            int newColor = interpolateColor(startColor, endColor, phaseProgress);
-            Bitmap bitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
-            for (int y = 0; y < screenHeight; y++) {
-                for (int x = 0; x < screenWidth; x++) {
-                    int gradientColor = calculateGradientColor(newColor, y);
-                    bitmap.setPixel(x, y, gradientColor);
-                }
-            }
-
+            Bitmap bitmap = getBitmapBackground();
             background.setBg(bitmap);
-            if (endColor == colors[0]) {
-                startTime = System.currentTimeMillis();
-            }
-
 
         }
+    }
+
+    private Bitmap getBitmapBackground() {
+        long currentTime = System.currentTimeMillis() - startTime;
+        long totalPhaseDuration = getTotalPhaseDuration();
+        long currentPhaseTime = currentTime % totalPhaseDuration;
+
+        // Calculate the current phase based on the elapsed time
+        int phase = 0;
+        long timeSum = 0;
+        for (int i = 0; i < phaseDurations.length; i++) {
+            timeSum += phaseDurations[i];
+            if (currentPhaseTime < timeSum) {
+                phase = i;
+                break;
+            }
+        }
+
+        // Calculate progress
+        long phaseStartTime = timeSum - phaseDurations[phase];
+        float phaseProgress = (currentPhaseTime - phaseStartTime) / (float) phaseDurations[phase];
+
+        // Handle looping of phases
+        int startColor = colors[phase];
+        int endColor;
+        if (phase == colors.length - 1) {
+            endColor = colors[0];
+        } else {
+            endColor = colors[phase + 1];
+        }
+
+        int newColor = interpolateColor(startColor, endColor, phaseProgress);
+        Bitmap bitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
+        for (int y = 0; y < screenHeight; y++) {
+            for (int x = 0; x < screenWidth; x++) {
+                int gradientColor = calculateGradientColor(newColor, y);
+                bitmap.setPixel(x, y, gradientColor);
+            }
+        }
+
+        startTime %= getTotalPhaseDuration();
+
+        return bitmap;
     }
 
     // use for calculation parabola of sun/moon
     private float calculateParabolicY(float x, int screenHeight, int screenWidth) {
         // Parabolic trajectory: y = -4*a*(x - p)^2 + q; where a controls the width, p is the peak's x-position, q is the peak's y-position.
-        float a = 4.0f / (screenWidth * screenWidth); // Adjust 'a' as needed
+        float a = 1000f / (screenWidth * screenWidth); // Adjust 'a' as needed
         float p = screenWidth / 2.0f; // Peak at the middle of the screen
-        float q = screenHeight / 3.0f; // Adjust 'q' to set the peak's height, 1/3rd from the top
-        return -a * (x - p) * (x - p) + q;
+        float q = screenHeight / 5.0f; // Adjust 'q' to set the peak's height, 1/3rd from the top
+        return a * (x - p) * (x - p) + q;
     }
 
     private long getTotalPhaseDuration() {
