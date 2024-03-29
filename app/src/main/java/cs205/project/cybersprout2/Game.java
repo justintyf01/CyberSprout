@@ -55,12 +55,16 @@ public class Game {
     // private BackgroundTaskThreadPool threadPool = BackgroundTaskThreadPool.getThreadPool();
 
     /****************** STATUS BAR ******************/
-
     private final Bitmap growthIcon;
-
     private final Bitmap nutritionIcon;
-
     private final Bitmap saturationIcon;
+
+    /****************** CLOUDS ******************/
+
+    private final Bitmap cloud1, cloud2, cloud3, cloud4;
+    private List<Cloud> clouds = new ArrayList<>();
+    private boolean cloudsScaled = false;
+
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
         // add this to the parameter if implementing notifications
@@ -86,6 +90,26 @@ public class Game {
         this.saturationIcon = Bitmap.createScaledBitmap(originalSaturationIcon, logoSize, logoSize, true);
         this.nutritionIcon = Bitmap.createScaledBitmap(originalNutritionIcon, logoSize, logoSize, true);
 
+        int cloudWidth = 200; // Desired width for the cloud images
+        int cloudHeight = 150; // Desired height for the cloud images
+
+        Bitmap cloud1Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud1);
+        this.cloud1 = Bitmap.createScaledBitmap(cloud1Bitmap, cloudWidth, cloudHeight, false);
+
+        Bitmap cloud2Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud2);
+        this.cloud2 = Bitmap.createScaledBitmap(cloud2Bitmap, cloudWidth, cloudHeight, false);
+
+        Bitmap cloud3Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud3);
+        this.cloud3 = Bitmap.createScaledBitmap(cloud3Bitmap, cloudWidth, cloudHeight, false);
+
+        Bitmap cloud4Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud4);
+        this.cloud4 = Bitmap.createScaledBitmap(cloud4Bitmap, cloudWidth, cloudHeight, false);
+
+
+        clouds.add(new Cloud(context, cloud1, 0, 200, -1.2f)); // Cloud 1
+        clouds.add(new Cloud(context, cloud2, screenWidth, 100, 1.1f)); // Cloud 2
+        clouds.add(new Cloud(context, cloud3, screenWidth / 2, 300, 0.9f)); // Cloud 3
+
         new Thread(new PlantManager(plant), "plantManager").start();
 
         this.background = new Background(context, screenWidth, screenHeight);
@@ -108,16 +132,17 @@ public class Game {
 
             executorService.execute(() -> {
                 while (activeTouches.get(pointerId) != null) {
-                    plant.setSaturation(plant.getSaturation() + 1);
-                    dropletLock.lock();
-                    try {
-                        float dropletX = wateringCan.getX()+100;
-                        float dropletY = wateringCan.getY()+425;
-                        droplets.add(new Droplet(context, dropletX, dropletY));
-                        droplets.add(new Droplet(context, dropletX, dropletY));
-                        droplets.add(new Droplet(context, dropletX, dropletY));
-                    } finally {
-                        dropletLock.unlock();
+                    if (wateringCan != null) { // Add this check
+                        plant.setSaturation(plant.getSaturation() + 1);
+                        dropletLock.lock();
+                        try {
+                            float dropletX = wateringCan.getX() + 100; // This line was causing the crash
+                            float dropletY = wateringCan.getY() + 425;
+                            droplets.add(new Droplet(context, dropletX, dropletY));
+                            // Other operations
+                        } finally {
+                            dropletLock.unlock();
+                        }
                     }
                     try {
                         Thread.sleep(50);
@@ -166,16 +191,18 @@ public class Game {
         }
         dropletLock.unlock();
 
+        // Update and draw clouds
+        updateGameState();
+        for (Cloud cloud : clouds) {
+            cloud.draw(canvas); // Draw each cloud
+        }
+
         plantDraw(canvas);
         drawStatusBar(canvas);
 
 //        canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.sun), 0,800
 //                ,null);
 //        canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.moon), 0,0,null);
-
-
-
-
 
     }
 
@@ -253,18 +280,12 @@ public class Game {
         canvas.drawBitmap(nutritionIcon, statusBarMargin + innerMargin, iconY, null);
     }
 
-
-
-
-    // Call this method when you want to perform background tasks such as loading resources,
-    // without blocking the UI thread.
-    public void performBackgroundTask(Runnable task) {
-        executorService.execute(task);
-    }
-
-    // Call this method when the game is closing or you no longer need the ExecutorService
-    public void shutdown() {
-        executorService.shutdownNow();
+    public void updateGameState() {
+        // Update cloud positions
+        for (Cloud cloud : clouds) {
+            cloud.update();
+        }
+        // Include other game state updates here if necessary
     }
 
 }

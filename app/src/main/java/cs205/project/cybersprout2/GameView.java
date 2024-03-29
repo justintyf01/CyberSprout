@@ -11,17 +11,32 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.os.Handler;
 
 import androidx.annotation.NonNull;
 
 import java.util.function.Consumer;
+import java.util.List;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     private final Game game = new Game(getContext(), this::useCanvas);
     private GameThread gameThread;
-
+    // Runnable task for updating and drawing clouds
+    private Runnable updateCloudsTask = new Runnable() {
+        @Override
+        public void run() {
+            if (game != null) {
+                game.updateGameState(); // Ask the game to update its state
+                invalidate(); // Trigger onDraw to redraw the view
+                handler.postDelayed(this, FRAME_RATE); // Schedule the next update
+            }
+        }
+    };
     private final SurfaceHolder surfaceHolder;
+    private final int FRAME_RATE = 1000 / 60; // For 60 FPS
+    private Handler handler = new Handler();
+    private List<Cloud> clouds;
 
 //    private final Bitmap[] plantBitmap;
 
@@ -36,6 +51,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         // set this view in focus
         setFocusable(View.FOCUSABLE);
+
+        // Initialize your clouds and other game elements here
+        handler.post(updateCloudsTask); // Start the update task
 
 //        setOnTouchListener((view, event) -> {
 //            game.click(event);
@@ -99,6 +117,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         // Start the thread
         gameThread.startGame();
+        startCloudUpdates();
 
         // TODO: remove, used for initial testing
 //        Canvas canvas = surfaceHolder.lockCanvas();
@@ -143,5 +162,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 //        paint.setTextSize(50);
 //        canvas.drawText("HeLOOOOOO", 150, 150, paint);
 //    }
+
+    public void startCloudUpdates() {
+        handler.post(updateCloudsTask);
+    }
+
+    public void stopCloudUpdates() {
+        handler.removeCallbacks(updateCloudsTask);
+    }
+
 
 }
