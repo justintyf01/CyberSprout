@@ -36,7 +36,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private final SurfaceHolder surfaceHolder;
     private final int FRAME_RATE = 1000 / 60; // For 60 FPS
     private Handler handler = new Handler();
-    private List<Cloud> clouds;
 
 //    private final Bitmap[] plantBitmap;
 
@@ -117,7 +116,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         // Start the thread
         gameThread.startGame();
-        startCloudUpdates();
 
         // TODO: remove, used for initial testing
 //        Canvas canvas = surfaceHolder.lockCanvas();
@@ -162,14 +160,5 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 //        paint.setTextSize(50);
 //        canvas.drawText("HeLOOOOOO", 150, 150, paint);
 //    }
-
-    public void startCloudUpdates() {
-        handler.post(updateCloudsTask);
-    }
-
-    public void stopCloudUpdates() {
-        handler.removeCallbacks(updateCloudsTask);
-    }
-
 
 }
