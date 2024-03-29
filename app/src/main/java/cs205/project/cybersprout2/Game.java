@@ -67,11 +67,17 @@ public class Game {
 
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
+
+
         // add this to the parameter if implementing notifications
 //        this.runnable = runnable;
         this.context = context;
         this.screenWidth = context.getResources().getDisplayMetrics().widthPixels;
         this.screenHeight = context.getResources().getDisplayMetrics().heightPixels;
+
+        this.background = new Background(context, screenWidth, screenHeight);
+        // Start thread to constantly update background values based on real time
+        new Thread(new BackgroundUpdater(background), "Background Color Handler").start();
 
         this.useCanvas = useCanvas;
         plant = new Plant(context);
@@ -112,9 +118,7 @@ public class Game {
 
         new Thread(new PlantManager(plant), "plantManager").start();
 
-        this.background = new Background(context, screenWidth, screenHeight);
-        // Start thread to constantly update background values based on real time
-        new Thread(new BackgroundUpdater(background), "Background Color Handler").start();
+
 
     }
 

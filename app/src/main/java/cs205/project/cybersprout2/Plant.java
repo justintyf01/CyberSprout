@@ -41,11 +41,11 @@ public class Plant {
     }
 
     public int getImageWidth() {
-        return plantImages[0].getWidth();
+        return plantImages[stage.get()].getWidth();
     }
 
     public int getImageHeight() {
-        return plantImages[0].getHeight();
+        return plantImages[stage.get()].getHeight();
     }
 
     public int getStage() {

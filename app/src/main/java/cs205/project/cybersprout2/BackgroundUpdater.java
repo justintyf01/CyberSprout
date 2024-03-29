@@ -79,6 +79,7 @@ public class BackgroundUpdater implements Runnable {
                 startTime = System.currentTimeMillis();
             }
 
+
         }
     }
 
