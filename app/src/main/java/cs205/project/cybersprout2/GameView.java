@@ -70,9 +70,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         // No active touch on the right side yet, handle this touch
                         game.handleWateringCanTouch(event.getPointerId(0), x, y, true);
                         isRightSideTouchActive.set(true);
-                    } else if (!isRightSide) {
+                    }  else {
+                        game.handleFertiliserTouch(event.getPointerId(0), x, y, true);
                         // Handle left side touch if needed, assuming no concurrent right-side touch needs to be ignored
                     }
+
                     break;
                 case MotionEvent.ACTION_MOVE:
                     // Optionally handle movement if necessary
@@ -80,7 +82,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         // Assuming you want to track movement only for the right side active touch
                         game.handleWateringCanTouch(event.getPointerId(0), x, y, true);
                     } else {
-
+                        game.handleFertiliserTouch(event.getPointerId(0), x, y, true);
                     }
                     break;
                 case MotionEvent.ACTION_UP:
@@ -89,6 +91,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         // End the right side touch
                         game.handleWateringCanTouch(event.getPointerId(0), x, y, false);
                         isRightSideTouchActive.set(false);
+                    } else {
+                        game.handleFertiliserTouch(event.getPointerId(0), x, y, false);
                     }
                     break;
             }

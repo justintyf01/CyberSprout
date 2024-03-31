@@ -43,11 +43,15 @@ public class Game {
     private final Plant plant;
 
     /****************** WATERING CAN AND DROPLETS ******************/
-    private final Map<Integer, WateringCan> activeTouches = new HashMap<>();
+    private final Map<Integer, TouchObject> activeTouches = new HashMap<>();
     private WateringCan wateringCan;
+    private FertilizerBox fertilizerBox;
+    private List<Fertilizer> fertilizers = new ArrayList<>();
+    private final ReentrantLock fertilizerLock = new ReentrantLock();
     private final List<Droplet> droplets = new ArrayList<>();
     private final ReentrantLock dropletLock = new ReentrantLock();
-    private final ExecutorService executorService;
+    private final ExecutorService dropletExecutorService;
+    private final ExecutorService fertilizerExecutorService;
     // private BackgroundTaskThreadPool threadPool = BackgroundTaskThreadPool.getThreadPool();
 
     /****************** STATUS BAR ******************/
@@ -77,7 +81,8 @@ public class Game {
 
         this.useCanvas = useCanvas;
         plant = new Plant(context);
-        this.executorService = Executors.newFixedThreadPool(3);
+        this.dropletExecutorService = Executors.newFixedThreadPool(1);
+        this.fertilizerExecutorService = Executors.newFixedThreadPool(1);
 
         this.sun = BitmapFactory.decodeResource(context.getResources(), R.drawable.sun);
         this.moon = BitmapFactory.decodeResource(context.getResources(), R.drawable.moon);
@@ -110,7 +115,7 @@ public class Game {
 
         clouds.add(new Cloud(context, cloud1, 0, 200, -1.2f)); // Cloud 1
         clouds.add(new Cloud(context, cloud2, screenWidth, 100, 1.1f)); // Cloud 2
-        clouds.add(new Cloud(context, cloud3, screenWidth / 2, 300, 0.9f)); // Cloud 3
+        clouds.add(new Cloud(context, cloud3, (float) screenWidth / 2, 300, 0.9f)); // Cloud 3
 
         new Thread(new PlantManager(plant), "plantManager").start();
 
@@ -118,19 +123,14 @@ public class Game {
 
     }
 
-    public void updatePosition(float x, float y, boolean isSun) {
-        this.bodyX = x;
-        this.bodyY = y;
-        this.isSun = isSun;
-    }
-
+    // maybe can refactor this method with the fertilizer box method
     public void handleWateringCanTouch(int pointerId, float x, float y, boolean isDown) {
         if (isDown) {
 //            activeTouches.put(pointerId, new PointF(x, y));
             this.wateringCan = new WateringCan(context, x, y);
             activeTouches.put(pointerId, wateringCan);
 
-            executorService.execute(() -> {
+            dropletExecutorService.execute(() -> {
                 while (activeTouches.get(pointerId) != null) {
                     if (wateringCan != null) {
                         int plantSaturation = plant.getSaturation();
@@ -140,6 +140,9 @@ public class Game {
                             float dropletX = wateringCan.getX() + 100; // This line was causing the crash
                             float dropletY = wateringCan.getY() + 425;
                             droplets.add(new Droplet(context, dropletX, dropletY));
+                            droplets.add(new Droplet(context, dropletX, dropletY));
+                            droplets.add(new Droplet(context, dropletX, dropletY));
+
                             // Other operations
                         } finally {
                             dropletLock.unlock();
@@ -156,7 +159,47 @@ public class Game {
             // If the finger is lifted, remove the touch point
             activeTouches.remove(pointerId);
             wateringCan = null;
+
 //            wateringCan.endThread();
+        }
+    }
+
+    public void handleFertiliserTouch (int pointerId, float x, float y, boolean isDown) {
+        if (isDown) {
+            this.fertilizerBox = new FertilizerBox(context, x, y); // Assuming this sets the initial position
+            activeTouches.put(pointerId, fertilizerBox);
+
+            fertilizerExecutorService.execute(() -> {
+                while (activeTouches.get(pointerId) != null) {
+                    fertilizerLock.lock();
+                    try {
+                        float fertilizerX = fertilizerBox.getX() + 250; // Starting X position
+                        float fertilizerY = fertilizerBox.getY() + 175; // Starting Y position
+
+//                        Fertilizer fertilizer = new Fertilizer(context, fertilizerX, fertilizerY);
+                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
+                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
+                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
+                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
+                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
+
+//                        // Update all fertilizers' positions
+//                        for (Fertilizer fert : fertilizers) {
+//                            fert.update(screenHeight);
+//                        }
+                    } finally {
+                        fertilizerLock.unlock();
+                    }
+                    try {
+                        Thread.sleep(50); // Control the speed of falling
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+        } else {
+            activeTouches.remove(pointerId);
+            fertilizerBox = null;
         }
     }
 
@@ -178,21 +221,36 @@ public class Game {
         canvas.drawBitmap(background.getBody(), background.getBodyX(), background.getBodyY(), null);
 //        canvas.drawColor(currentColor.get());
 //        canvas.drawColor(Color.GRAY);
-        for (WateringCan can : activeTouches.values()) {
-            canvas.drawBitmap(can.getWateringCanImage(), can.getX(), can.getY(), null);
+        for (TouchObject obj : activeTouches.values()) {
+            canvas.drawBitmap(obj.getImage(), obj.getX(), obj.getY(), null);
         }
+
         dropletLock.lock();
         if (!droplets.isEmpty()) {
             Iterator<Droplet> dropletIterator = droplets.iterator();
             while (dropletIterator.hasNext()) {
                 Droplet d = dropletIterator.next();
                 canvas.drawBitmap(d.getDropletImage(), d.getX(), d.getY(), null);
+                // TODO: can be moved to the executor thread above
                 if (!d.updateDroplet()) {
                     dropletIterator.remove();
                 }
             }
         }
         dropletLock.unlock();
+
+        fertilizerLock.lock();
+        if (!fertilizers.isEmpty()) {
+            Iterator<Fertilizer> fertilizerIterator = fertilizers.iterator();
+            while (fertilizerIterator.hasNext()) {
+                Fertilizer f = fertilizerIterator.next();
+                f.draw(canvas);
+                if (!f.update(screenHeight)) {
+                    fertilizerIterator.remove();
+                }
+            }
+        }
+        fertilizerLock.unlock();
 
         // Update and draw clouds
         updateGameState();
