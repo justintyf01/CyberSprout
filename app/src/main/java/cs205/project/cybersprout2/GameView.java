@@ -52,10 +52,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         // Initialize your clouds and other game elements here
         handler.post(updateCloudsTask); // Start the update task
 
-//        setOnTouchListener((view, event) -> {
-//            game.click(event);
-//            return true;
-//        });
+        // This handles left (Fertilizer) and right (Watering can) touches
         setOnTouchListener((view, event) -> {
             int action = event.getActionMasked();
             float x = event.getX();
@@ -72,12 +69,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         isRightSideTouchActive.set(true);
                     }  else {
                         game.handleFertiliserTouch(event.getPointerId(0), x, y, true);
-                        // Handle left side touch if needed, assuming no concurrent right-side touch needs to be ignored
                     }
 
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    // Optionally handle movement if necessary
                     if (isRightSideTouchActive.get()) {
                         // Assuming you want to track movement only for the right side active touch
                         game.handleWateringCanTouch(event.getPointerId(0), x, y, true);

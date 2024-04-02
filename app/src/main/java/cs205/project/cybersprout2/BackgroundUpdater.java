@@ -22,14 +22,19 @@ public class BackgroundUpdater implements Runnable {
     private long startTime;
     private final int screenHeight;
     private final int screenWidth;
+
+    // Coordinates of the body = sun || moon
     private float bodyX;
     private float bodyY;
+
+    // Determines between sun || moon
     private boolean isDay = true;
     private long dayTime;
 
 
     public BackgroundUpdater(Background background) {
 
+        // take in background object and update the bitmap for it in this thread
         this.background = background;
         this.startTime = System.currentTimeMillis();
 
@@ -43,23 +48,27 @@ public class BackgroundUpdater implements Runnable {
 
     }
 
+    // Thread to calculate background color and update sun/moon positions
     @Override
     public void run() {
+
+        // Track start of day/night
         long bodyStartTime = System.currentTimeMillis();
         while (true) { // Ensure continuous update
 
-            // get progress = elapsed time / 37500
-            // bodyX starts from screenWidth
-            // from start to 18750, need to move screenWidth + bitmapWidth = totalLength
-            // bodyX = screenWidth - progress * totalLength
+            /** Calculations for progress of body (sun/moon)
+             * get progress = elapsed time / 37500
+             * bodyX starts from screenWidth
+             * from start to 18750, need to move screenWidth + bitmapWidth = totalLength
+             * bodyX = screenWidth - progress * totalLength */
             double bodyProgress = (double) (System.currentTimeMillis() - bodyStartTime) / dayTime;
             int totalLength = background.getBody().getWidth() + screenWidth;
             bodyX = (float) (screenWidth - bodyProgress * totalLength);
             background.setBodyX(bodyX);
             bodyY = calculateParabolicY(bodyX, screenHeight, screenWidth - background.getBody().getWidth());
-            System.out.println(bodyY);
             background.setBodyY(bodyY);
 
+            // Change value of boolean if progress of day/night
             if (bodyProgress > 1) {
                 bodyStartTime = System.currentTimeMillis();
                 background.setDay(!isDay);
@@ -67,13 +76,15 @@ public class BackgroundUpdater implements Runnable {
             }
 
 
-
+            // Calculate color and background gradient
             Bitmap bitmap = getBitmapBackground();
+            // Update background bitmap
             background.setBg(bitmap);
 
         }
     }
 
+    // This method calculates the gradient background
     private Bitmap getBitmapBackground() {
         long currentTime = System.currentTimeMillis() - startTime;
         long totalPhaseDuration = getTotalPhaseDuration();
@@ -103,11 +114,14 @@ public class BackgroundUpdater implements Runnable {
             endColor = colors[phase + 1];
         }
 
+        // Calculate current color based on progress
         int newColor = interpolateColor(startColor, endColor, phaseProgress);
         Bitmap bitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
         for (int y = 0; y < screenHeight; y++) {
             for (int x = 0; x < screenWidth; x++) {
+                // Calculate gradient
                 int gradientColor = calculateGradientColor(newColor, y);
+                // Assign gradient bitmap
                 bitmap.setPixel(x, y, gradientColor);
             }
         }
@@ -117,23 +131,7 @@ public class BackgroundUpdater implements Runnable {
         return bitmap;
     }
 
-    // use for calculation parabola of sun/moon
-    private float calculateParabolicY(float x, int screenHeight, int screenWidth) {
-        // Parabolic trajectory: y = -4*a*(x - p)^2 + q; where a controls the width, p is the peak's x-position, q is the peak's y-position.
-        float a = 1000f / (screenWidth * screenWidth); // Adjust 'a' as needed
-        float p = screenWidth / 2.0f; // Peak at the middle of the screen
-        float q = screenHeight / 5.0f; // Adjust 'q' to set the peak's height, 1/3rd from the top
-        return a * (x - p) * (x - p) + q;
-    }
-
-    private long getTotalPhaseDuration() {
-        long total = 0;
-        for (long duration : phaseDurations) {
-            total += duration;
-        }
-        return total;
-    }
-
+    // Calculate current color based on progress
     private int interpolateColor(int colorStart, int colorEnd, float progress) {
         int alphaStart = Color.alpha(colorStart);
         int redStart = Color.red(colorStart);
@@ -153,6 +151,7 @@ public class BackgroundUpdater implements Runnable {
         return Color.argb(alpha, red, green, blue);
     }
 
+    // Calculate gradient based on current color calculated by interpolateColor
     private int calculateGradientColor(int color, int y) {
         float gradientFactor = (float) y / screenHeight; // 0 at top, 1 at bottom
         int alpha = Color.alpha(color);
@@ -169,6 +168,22 @@ public class BackgroundUpdater implements Runnable {
         blue = (int) (blue * brightnessFactor);
 
         return Color.argb(alpha, red, green, blue);
+    }
+    // use for calculation parabola of sun/moon
+    private float calculateParabolicY(float x, int screenHeight, int screenWidth) {
+        // Parabolic trajectory: y = -4*a*(x - p)^2 + q; where a controls the width, p is the peak's x-position, q is the peak's y-position.
+        float a = 1000f / (screenWidth * screenWidth); // Adjust 'a' as needed
+        float p = screenWidth / 2.0f; // Peak at the middle of the screen
+        float q = screenHeight / 5.0f; // Adjust 'q' to set the peak's height, 1/3rd from the top
+        return a * (x - p) * (x - p) + q;
+    }
+
+    private long getTotalPhaseDuration() {
+        long total = 0;
+        for (long duration : phaseDurations) {
+            total += duration;
+        }
+        return total;
     }
 }
 

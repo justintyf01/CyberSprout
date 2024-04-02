@@ -74,19 +74,18 @@ public class Game {
         this.context = context;
         this.screenWidth = context.getResources().getDisplayMetrics().widthPixels;
         this.screenHeight = context.getResources().getDisplayMetrics().heightPixels;
+        this.useCanvas = useCanvas;
 
+
+        /********************************* BACKGROUND *********************************/
         this.background = new Background(context, screenWidth, screenHeight);
         // Start thread to constantly update background values based on real time
         new Thread(new BackgroundUpdater(background), "Background Color Handler").start();
 
-        this.useCanvas = useCanvas;
-        plant = new Plant(context);
-        this.dropletExecutorService = Executors.newFixedThreadPool(1);
-        this.fertilizerExecutorService = Executors.newFixedThreadPool(1);
-
         this.sun = BitmapFactory.decodeResource(context.getResources(), R.drawable.sun);
         this.moon = BitmapFactory.decodeResource(context.getResources(), R.drawable.moon);
 
+        /********************************* CLOUD *********************************/
         int logoSize = 80;
 
         Bitmap originalGrowthIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.growth_icon);
@@ -117,7 +116,11 @@ public class Game {
         clouds.add(new Cloud(context, cloud2, screenWidth, 100, 1.1f)); // Cloud 2
         clouds.add(new Cloud(context, cloud3, (float) screenWidth / 2, 300, 0.9f)); // Cloud 3
 
+        /********************************* PLANT/WATERING CAN/FERTILIZER *********************************/
+        plant = new Plant(context);
         new Thread(new PlantManager(plant), "plantManager").start();
+        this.dropletExecutorService = Executors.newFixedThreadPool(1);
+        this.fertilizerExecutorService = Executors.newFixedThreadPool(1);
 
 
 
@@ -160,7 +163,6 @@ public class Game {
             activeTouches.remove(pointerId);
             wateringCan = null;
 
-//            wateringCan.endThread();
         }
     }
 
