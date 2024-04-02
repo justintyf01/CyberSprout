@@ -21,13 +21,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.graphics.Paint;
+import android.view.MotionEvent;
 
 public class Game {
     /************************** SYSTEM **************************/
     private final Context context;
     private final Predicate<Consumer<Canvas>> useCanvas;
-    private final int screenWidth;
     private final int screenHeight;
+
     public BackgroundUpdater updater;
     /************************* BACKGROUND *************************/
     private final Background background;
@@ -41,16 +42,18 @@ public class Game {
 
     /*************************** PLANT ***************************/
     private final Plant plant;
+    private final PlantManager plantManager;
 
     /****************** WATERING CAN AND DROPLETS ******************/
     private final Map<Integer, TouchObject> activeTouches = new HashMap<>();
     private WateringCan wateringCan;
     private FertilizerBox fertilizerBox;
-    private List<Fertilizer> fertilizers = new ArrayList<>();
+    private final List<Fertilizer> fertilizers = new ArrayList<>();
     private final ReentrantLock fertilizerLock = new ReentrantLock();
     private final List<Droplet> droplets = new ArrayList<>();
     private final ReentrantLock dropletLock = new ReentrantLock();
     private final ExecutorService dropletExecutorService;
+    private volatile boolean isPaused = false;
     private final ExecutorService fertilizerExecutorService;
     // private BackgroundTaskThreadPool threadPool = BackgroundTaskThreadPool.getThreadPool();
 
@@ -59,20 +62,19 @@ public class Game {
     private final Bitmap nutritionIcon;
     private final Bitmap saturationIcon;
 
-    /****************** CLOUDS ******************/
-
-    private final Bitmap cloud1, cloud2, cloud3, cloud4;
-    private List<Cloud> clouds = new ArrayList<>();
-    private boolean cloudsScaled = false;
+    private final Bitmap cloud4;
+    private final List<Cloud> clouds = new ArrayList<>();
+    private final boolean cloudsScaled = false;
 
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
 
 
+
         // add this to the parameter if implementing notifications
 //        this.runnable = runnable;
         this.context = context;
-        this.screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+        int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
         this.screenHeight = context.getResources().getDisplayMetrics().heightPixels;
 
         this.background = new Background(context, screenWidth, screenHeight);
@@ -101,13 +103,14 @@ public class Game {
         int cloudHeight = 150; // Desired height for the cloud images
 
         Bitmap cloud1Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud1);
-        this.cloud1 = Bitmap.createScaledBitmap(cloud1Bitmap, cloudWidth, cloudHeight, false);
+        /****************** CLOUDS ******************/
+        Bitmap cloud1 = Bitmap.createScaledBitmap(cloud1Bitmap, cloudWidth, cloudHeight, false);
 
         Bitmap cloud2Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud2);
-        this.cloud2 = Bitmap.createScaledBitmap(cloud2Bitmap, cloudWidth, cloudHeight, false);
+        Bitmap cloud2 = Bitmap.createScaledBitmap(cloud2Bitmap, cloudWidth, cloudHeight, false);
 
         Bitmap cloud3Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud3);
-        this.cloud3 = Bitmap.createScaledBitmap(cloud3Bitmap, cloudWidth, cloudHeight, false);
+        Bitmap cloud3 = Bitmap.createScaledBitmap(cloud3Bitmap, cloudWidth, cloudHeight, false);
 
         Bitmap cloud4Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud4);
         this.cloud4 = Bitmap.createScaledBitmap(cloud4Bitmap, cloudWidth, cloudHeight, false);
@@ -116,15 +119,14 @@ public class Game {
         clouds.add(new Cloud(context, cloud1, 0, 200, -1.2f)); // Cloud 1
         clouds.add(new Cloud(context, cloud2, screenWidth, 100, 1.1f)); // Cloud 2
         clouds.add(new Cloud(context, cloud3, (float) screenWidth / 2, 300, 0.9f)); // Cloud 3
-
-        new Thread(new PlantManager(plant), "plantManager").start();
-
-
+        this.plantManager = new PlantManager(plant);
+        new Thread(plantManager, "PlantManager").start();
 
     }
 
     // maybe can refactor this method with the fertilizer box method
     public void handleWateringCanTouch(int pointerId, float x, float y, boolean isDown) {
+        if (isPaused) return;
         if (isDown) {
 //            activeTouches.put(pointerId, new PointF(x, y));
             this.wateringCan = new WateringCan(context, x, y);
@@ -164,7 +166,20 @@ public class Game {
         }
     }
 
+    public void pauseGame() {
+        isPaused = true;
+        // Pause droplet and fertilizer tasks
+        // Note: You'll need to implement a mechanism to pause/resume tasks within these executors or manage tasks directly
+        plantManager.pause(); // Assuming PlantManager has a proper pause mechanism implemented
+    }
+    public void resumeGame() {
+        isPaused = false;
+        // Resume droplet and fertilizer tasks
+        plantManager.resume(); // Assuming PlantManager has a proper resume mechanism implemented
+    }
+
     public void handleFertiliserTouch (int pointerId, float x, float y, boolean isDown) {
+        if (isPaused) return;
         if (isDown) {
             this.fertilizerBox = new FertilizerBox(context, x, y); // Assuming this sets the initial position
             activeTouches.put(pointerId, fertilizerBox);
@@ -207,10 +222,13 @@ public class Game {
 
 
     public void draw() {
+        if (isPaused) return; // Skip drawing if the game is paused
         if (useCanvas.test(this::draw)) {
-            // Can implement framerate counter here
-//            System.out.println("Draw was successful");
+            // Your existing drawing logic
         }
+    }
+    public Plant getPlant() {
+        return plant;
     }
 
     // this method does the actual drawing
@@ -268,7 +286,41 @@ public class Game {
 //        canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.moon), 0,0,null);
 
     }
+    public void handleTouch(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
+        int action = event.getActionMasked();
+        int pointerId = event.getPointerId(event.getActionIndex());
 
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                // Start watering or fertilizing based on the side of the screen touched
+                if (x < (float) screenHeight / 2) {
+                    handleWateringCanTouch(pointerId, x, y, true);
+                } else {
+                    handleFertiliserTouch(pointerId, x, y, true);
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                // Update position for watering or fertilizing
+                if (activeTouches.containsKey(pointerId)) {
+                    // Update the touch object's position
+                    TouchObject touchObject = activeTouches.get(pointerId);
+                    if (touchObject instanceof WateringCan) {
+                        handleWateringCanTouch(pointerId, x, y, true);
+                    } else if (touchObject instanceof FertilizerBox) {
+                        handleFertiliserTouch(pointerId, x, y, true);
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                // Stop watering or fertilizing
+                handleWateringCanTouch(pointerId, x, y, false);
+                handleFertiliserTouch(pointerId, x, y, false);
+                break;
+        }
+    }
     public void plantDraw(Canvas canvas) {
         float screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
         float screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise

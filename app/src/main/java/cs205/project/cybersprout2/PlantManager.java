@@ -2,10 +2,27 @@ package cs205.project.cybersprout2;
 
 public class PlantManager implements Runnable {
     private final Plant plant;
+    private final Object pauseLock = new Object();
+    private boolean isPaused = false;
 
-    PlantManager(Plant plant) {
+
+    public PlantManager(Plant plant) {
         this.plant = plant;
     }
+
+    public void pause() {
+        synchronized (pauseLock) {
+            isPaused = true;
+        }
+    }
+
+    public void resume() {
+        synchronized (pauseLock) {
+            isPaused = false;
+            pauseLock.notifyAll(); // Notify to resume operation
+        }
+    }
+
     @Override
     public void run() {
         try {
@@ -17,11 +34,17 @@ public class PlantManager implements Runnable {
                     counter = 0;
                 }
 
+                // Check if the game is paused
+                synchronized (pauseLock) {
+                    while (isPaused) {
+                        pauseLock.wait();
+                    }
+                }
+
                 // get stats of plant
                 int growth = plant.getGrowth();
                 int saturation = plant.getSaturation();
                 int nutrition = plant.getNutrition();
-//                System.out.printf("growth = %d, saturation = %d. nutrition = %d", growth, saturation, nutrition);
 
                 // every 5 secs decrease nutrition and saturation
                 if (counter % 50 == 0) {
@@ -47,7 +70,7 @@ public class PlantManager implements Runnable {
                 }
 
                 counter++;
-                Thread.sleep(500); // Sleep for 0.1 seconds
+                Thread.sleep(1000); // Sleep for 1 seconds
             }
 
         } catch (InterruptedException e) {

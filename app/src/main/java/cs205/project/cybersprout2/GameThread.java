@@ -3,11 +3,14 @@ package cs205.project.cybersprout2;
 public class GameThread extends Thread {
 
     private final Game game;
-    private boolean isRunning;
+    private volatile boolean isRunning = false;
+    private final Object pauseLock = new Object();
+    private boolean isPaused = false;
+    private final PlantManager plantManager;
 
     public GameThread(Game game) {
         this.game = game;
-        isRunning = false;
+        this.plantManager = new PlantManager(game.getPlant());
     }
 
     public void startGame() {
@@ -15,22 +18,43 @@ public class GameThread extends Thread {
         start();
     }
 
+    public void stopGame() {
+        isRunning = false;
+        // Ensure we also resume the thread so it can finish properly
+        resumeGame();
+    }
+
     @Override
     public void run() {
-
         while (isRunning) {
-            // draw the plant
+            synchronized (pauseLock) {
+                if (isPaused) {
+                    try {
+                        pauseLock.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
             game.draw();
-//            game.update();
         }
     }
 
-//    public void game_sleep() {
-//        try {
-//            sleep(1000);
-//        } catch (InterruptedException e) {
-//            System.out.println(e.getMessage());
-//        }
-//    }
+    public void pauseGame() {
+        synchronized (pauseLock) {
+            isPaused = true;
+            plantManager.pause(); // Pause plant growth
+        }
+    }
 
+    public void resumeGame() {
+        synchronized (pauseLock) {
+            isPaused = false;
+            pauseLock.notifyAll();
+            plantManager.resume(); // Resume plant growth
+        }
+    }
+    public boolean isPaused() {
+        return isPaused;
+    }
 }
