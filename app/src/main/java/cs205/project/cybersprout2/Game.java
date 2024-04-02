@@ -134,7 +134,7 @@ public class Game {
                 while (activeTouches.get(pointerId) != null) {
                     if (wateringCan != null) {
                         int plantSaturation = plant.getSaturation();
-                        plant.setSaturation(plantSaturation == 100 ? 100 : plantSaturation + 1);
+                        plant.setSaturation(plantSaturation >= 100 ? 100 : plantSaturation + 1);
                         dropletLock.lock();
                         try {
                             float dropletX = wateringCan.getX() + 100; // This line was causing the crash
@@ -171,6 +171,8 @@ public class Game {
 
             fertilizerExecutorService.execute(() -> {
                 while (activeTouches.get(pointerId) != null) {
+                    int plantNutrition = plant.getNutrition();
+                    plant.setNutrition(plantNutrition >= 100 ? 100 : plantNutrition + 1);
                     fertilizerLock.lock();
                     try {
                         float fertilizerX = fertilizerBox.getX() + 250; // Starting X position
