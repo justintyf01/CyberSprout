@@ -68,7 +68,7 @@ public class BackgroundUpdater implements Runnable {
             bodyY = calculateParabolicY(bodyX, screenHeight, screenWidth - background.getBody().getWidth());
             background.setBodyY(bodyY);
 
-            // Change value of boolean if progress of day/night
+            // Change value of boolean if progress of day/night > 1 (state change)
             if (bodyProgress > 1) {
                 bodyStartTime = System.currentTimeMillis();
                 background.setDay(!isDay);
@@ -126,8 +126,11 @@ public class BackgroundUpdater implements Runnable {
             }
         }
 
+
+        // TODO: supposed to reset startTime so its not forever running but this line is wrong
         startTime %= getTotalPhaseDuration();
 
+        // Return bitmap of running time progress background calculated
         return bitmap;
     }
 
