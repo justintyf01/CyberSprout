@@ -61,8 +61,9 @@ public class Game {
     private final Bitmap growthIcon;
     private final Bitmap nutritionIcon;
     private final Bitmap saturationIcon;
-
     private final Bitmap pauseIcon;
+
+    private final Bitmap playIcon;
 
     private final Bitmap cloud4;
     private final List<Cloud> clouds = new ArrayList<>();
@@ -96,11 +97,13 @@ public class Game {
         Bitmap originalSaturationIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.saturation_icon);
         Bitmap originalNutritionIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.nutrition_icon);
         Bitmap originalPauseIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.pause_button);
+        Bitmap originalPlayIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.play_button);
 
         this.growthIcon = Bitmap.createScaledBitmap(originalGrowthIcon, logoSize, logoSize, true);
         this.saturationIcon = Bitmap.createScaledBitmap(originalSaturationIcon, logoSize, logoSize, true);
         this.nutritionIcon = Bitmap.createScaledBitmap(originalNutritionIcon, logoSize, logoSize, true);
         this.pauseIcon = Bitmap.createScaledBitmap(originalPauseIcon, logoSize, logoSize, true);
+        this.playIcon = Bitmap.createScaledBitmap(originalPlayIcon, logoSize, logoSize, true);
 
         int cloudWidth = 200; // Desired width for the cloud images
         int cloudHeight = 150; // Desired height for the cloud images
@@ -335,6 +338,13 @@ public class Game {
 
     public void drawStatusBar(Canvas canvas) {
         if (isPaused){
+            // Define the position for the pause button at the top left corner of the screen
+            float playButtonX = 20; // Adjust the X-coordinate as needed
+            float playButtonY = 20; // Adjust the Y-coordinate as needed
+
+            // Draw the pause button at the top left corner of the screen
+            canvas.drawBitmap(playIcon, playButtonX, playButtonY, null);
+
             return;
         }
         Paint paint = new Paint();
