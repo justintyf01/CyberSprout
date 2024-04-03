@@ -37,9 +37,11 @@ public class PlantManager implements Runnable {
                 // Check if the game is paused
                 synchronized (pauseLock) {
                     while (isPaused) {
+                        plant.pauseGrowth();
                         pauseLock.wait();
                     }
                 }
+                plant.resumeGrowth();
 
                 // get stats of plant
                 int growth = plant.getGrowth();

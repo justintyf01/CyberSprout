@@ -1,206 +1,159 @@
 package cs205.project.cybersprout2;
 
-import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class BackgroundUpdater implements Runnable {
     private final AtomicBoolean paused = new AtomicBoolean(false);
     private final Background background;
-    private final long[] phaseDurations = {15000, 15000, 7500, 15000, 15000, 7500}; // Duration for each phase
-    private final int[] colors = { // color of each phase
-            Color.parseColor("#FF4500"), // sunrise
-            Color.parseColor("#87CEEB"), // day (lightblue)
-            Color.parseColor("#FF4500"), // sunset/sunrise (orange red)
-            Color.parseColor("#00008B"), // night (darkblue)
-            Color.parseColor("#000000"), // midnight (black)
-            Color.parseColor("#00008B") // night
-    };
-//    private float x = 0, y = 0;
-
-    private long startTime;
+    private final long dayDuration = 30000; // Duration for a full day-night cycle in milliseconds
     private final int screenHeight;
     private final int screenWidth;
-
-    // Coordinates of the body = sun || moon
-    private float bodyX;
-    private float bodyY;
-
-    // Determines between sun || moon
-    private boolean isDay = true;
-    private long dayTime;
-
+    private long startTime;
+    private long pauseStartTime = 0; // Track when the pause started
+    private long totalPauseDuration = 0; // Total duration of all pauses
+    private List<Star> stars;
 
     public BackgroundUpdater(Background background) {
-
-        // take in background object and update the bitmap for it in this thread
         this.background = background;
-        this.startTime = System.currentTimeMillis();
-
         this.screenWidth = background.getScreenWidth();
         this.screenHeight = background.getScreenHeight();
-
-        bodyX = screenWidth;
-        bodyY = (float) screenHeight / 2;
-
-        dayTime = phaseDurations[0] + phaseDurations[1] + phaseDurations[2];
-
+        this.startTime = System.currentTimeMillis();
+        initializeStars();
     }
 
-    // Thread to calculate background color and update sun/moon positions
+    private void initializeStars() {
+        stars = new ArrayList<>();
+        Random rand = new Random();
+        for (int i = 0; i < 100; i++) { // Generate 100 stars at random positions
+            int x = rand.nextInt(screenWidth);
+            int y = rand.nextInt(screenHeight / 2); // Limit stars to the top half of the screen
+            stars.add(new Star(x, y));
+        }
+    }
+
     @Override
     public void run() {
-
-        // Track start of day/night
-        long bodyStartTime = System.currentTimeMillis();
-
-        while (true) { // Ensure continuous update
+        while (!Thread.currentThread().isInterrupted()) {
             if (paused.get()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                synchronized (paused) {
+                    try {
+                        paused.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
-            } else {
-                /** Calculations for progress of body (sun/moon)
-                 * get progress = elapsed time / 37500
-                 * bodyX starts from screenWidth
-                 * from start to 18750, need to move screenWidth + bitmapWidth = totalLength
-                 * bodyX = screenWidth - progress * totalLength */
-
-            double bodyProgress = (double) (System.currentTimeMillis() - bodyStartTime) / dayTime;
-            int totalLength = background.getBody().getWidth() + screenWidth;
-            bodyX = (float) (screenWidth - bodyProgress * totalLength);
-            background.setBodyX(bodyX);
-            bodyY = calculateParabolicY(bodyX, screenHeight, screenWidth - background.getBody().getWidth());
-            background.setBodyY(bodyY);
-
-            // Change value of boolean if progress of day/night > 1 (state change)
-            if (bodyProgress > 1) {
-                bodyStartTime = System.currentTimeMillis();
-                background.setDay(!isDay);
-                isDay = !isDay;
             }
 
+            long currentTime = System.currentTimeMillis();
+            long elapsedTime = currentTime - startTime - totalPauseDuration;
+            boolean isDay = elapsedTime / dayDuration % 2 == 0;
+            Bitmap updatedBackground = createBackgroundBitmap(elapsedTime % dayDuration, isDay);
+            background.setBg(updatedBackground);
 
-            // Calculate color and background gradient
-            Bitmap bitmap = getBitmapBackground();
-            // Update background bitmap
-            background.setBg(bitmap);
-
-        }
-    }
-    }
-    public void setPaused(boolean shouldPause) {
-        paused.set(shouldPause);
-    }
-
-    // This method calculates the gradient background
-    private Bitmap getBitmapBackground() {
-        long currentTime = System.currentTimeMillis() - startTime;
-        long totalPhaseDuration = getTotalPhaseDuration();
-        long currentPhaseTime = currentTime % totalPhaseDuration;
-
-        // Calculate the current phase based on the elapsed time
-        int phase = 0;
-        long timeSum = 0;
-        for (int i = 0; i < phaseDurations.length; i++) {
-            timeSum += phaseDurations[i];
-            if (currentPhaseTime < timeSum) {
-                phase = i;
-                break;
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
+    }
 
-        // Calculate progress
-        long phaseStartTime = timeSum - phaseDurations[phase];
-        float phaseProgress = (currentPhaseTime - phaseStartTime) / (float) phaseDurations[phase];
-
-        // Handle looping of phases
-        int startColor = colors[phase];
-        int endColor;
-        if (phase == colors.length - 1) {
-            endColor = colors[0];
-        } else {
-            endColor = colors[phase + 1];
-        }
-
-        // Calculate current color based on progress
-        int newColor = interpolateColor(startColor, endColor, phaseProgress);
+    private Bitmap createBackgroundBitmap(long elapsedTime, boolean isDay) {
         Bitmap bitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
-        for (int y = 0; y < screenHeight; y++) {
-            for (int x = 0; x < screenWidth; x++) {
-                // Calculate gradient
-                int gradientColor = calculateGradientColor(newColor, y);
-                // Assign gradient bitmap
-                bitmap.setPixel(x, y, gradientColor);
-            }
+        Canvas canvas = new Canvas(bitmap);
+
+        // Interpolate the background color
+        float progress = (float) elapsedTime / dayDuration;
+        int backgroundColor = interpolateBackgroundColor(progress, isDay);
+        canvas.drawColor(backgroundColor);
+
+        // Draw sun or moon
+        drawCelestialBody(canvas, progress, isDay);
+
+        // Draw stars if it's night
+        if (!isDay) {
+            drawStars(canvas, elapsedTime);
         }
 
-
-        // TODO: supposed to reset startTime so its not forever running but this line is wrong
-        startTime %= getTotalPhaseDuration();
-
-        // Return bitmap of running time progress background calculated
         return bitmap;
     }
 
-    // Calculate current color based on progress
-    private int interpolateColor(int colorStart, int colorEnd, float progress) {
-        int alphaStart = Color.alpha(colorStart);
-        int redStart = Color.red(colorStart);
-        int greenStart = Color.green(colorStart);
-        int blueStart = Color.blue(colorStart);
+    private int interpolateBackgroundColor(float progress, boolean isDay) {
+        // Define colors for day and night
+        int dayColor = Color.parseColor("#87CEEB");
+        int nightColor = Color.parseColor("#000033");
 
-        int alphaEnd = Color.alpha(colorEnd);
-        int redEnd = Color.red(colorEnd);
-        int greenEnd = Color.green(colorEnd);
-        int blueEnd = Color.blue(colorEnd);
 
-        int alpha = (int) (alphaStart + (alphaEnd - alphaStart) * progress);
-        int red = (int) (redStart + (redEnd - redStart) * progress);
-        int green = (int) (greenStart + (greenEnd - greenStart) * progress);
-        int blue = (int) (blueStart + (blueEnd - blueStart) * progress);
+        // Calculate interpolation factor
+        float factor = isDay ? progress : 1 - progress;
 
-        return Color.argb(alpha, red, green, blue);
+        // Smooth transition near sunrise and sunset
+        factor = (float) Math.cos(factor * Math.PI) / 2.0f + 0.5f;
+
+        return Color.rgb(
+                (int) (Color.red(dayColor) * factor + Color.red(nightColor) * (1 - factor)),
+                (int) (Color.green(dayColor) * factor + Color.green(nightColor) * (1 - factor)),
+                (int) (Color.blue(dayColor) * factor + Color.blue(nightColor) * (1 - factor))
+        );
     }
 
-    // Calculate gradient based on current color calculated by interpolateColor
-    private int calculateGradientColor(int color, int y) {
-        float gradientFactor = (float) y / screenHeight; // 0 at top, 1 at bottom
-        int alpha = Color.alpha(color);
-        int red = Color.red(color);
-        int green = Color.green(color);
-        int blue = Color.blue(color);
+    private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
+        Paint paint = new Paint();
+        float xPosition = screenWidth * (1 - progress); // Invert direction for sun/moon rise
+        float yPosition = (float) (screenHeight * 0.5 * (1 - Math.cos(Math.PI * progress)));
 
-        // Adjust the color's brightness based on its position
-        // For a stronger effect at the top, we decrease brightness towards the bottom
-        float brightnessFactor = 1 - gradientFactor * 0.5f; // Adjust this factor as needed
+        int color = isDay ? Color.YELLOW : Color.LTGRAY;
+        int radius = isDay ? 80 : 100; // Bigger sun and moon
 
-        red = (int) (red * brightnessFactor);
-        green = (int) (green * brightnessFactor);
-        blue = (int) (blue * brightnessFactor);
-
-        return Color.argb(alpha, red, green, blue);
-    }
-    // use for calculation parabola of sun/moon
-    private float calculateParabolicY(float x, int screenHeight, int screenWidth) {
-        // Parabolic trajectory: y = -4*a*(x - p)^2 + q; where a controls the width, p is the peak's x-position, q is the peak's y-position.
-        float a = 1000f / (screenWidth * screenWidth); // Adjust 'a' as needed
-        float p = screenWidth / 2.0f; // Peak at the middle of the screen
-        float q = screenHeight / 5.0f; // Adjust 'q' to set the peak's height, 1/3rd from the top
-        return a * (x - p) * (x - p) + q;
+        paint.setColor(color);
+        canvas.drawCircle(xPosition, yPosition, radius, paint);
     }
 
-    private long getTotalPhaseDuration() {
-        long total = 0;
-        for (long duration : phaseDurations) {
-            total += duration;
+    private void drawStars(Canvas canvas, long elapsedTime) {
+        Paint paint = new Paint();
+        paint.setColor(Color.WHITE);
+        float duskProgress = Math.max(0, 1 - 4 * (float) elapsedTime / dayDuration); // Reverse progress during dusk
+
+        for (Star star : stars) {
+            // Fade in stars based on dusk progress
+            int alpha = duskProgress < 1 ? (int)(255 * (1 - duskProgress)) : 255;
+            paint.setAlpha(alpha);
+
+            float x = (star.x + elapsedTime / 20) % screenWidth;
+            canvas.drawCircle(x, star.y, 2, paint);
         }
-        return total;
+    }
+
+
+    public void setPaused(boolean shouldPause) {
+        if (shouldPause) {
+            paused.set(true);
+            pauseStartTime = System.currentTimeMillis(); // Mark the pause start time
+        } else {
+            if (paused.getAndSet(false)) { // Ensure we only calculate if it was previously paused
+                totalPauseDuration += System.currentTimeMillis() - pauseStartTime; // Update total pause duration
+            }
+            synchronized (paused) {
+                paused.notifyAll();
+            }
+        }
+    }
+
+    static class Star {
+        final int x;
+        final int y;
+
+        Star(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
     }
 }
-
