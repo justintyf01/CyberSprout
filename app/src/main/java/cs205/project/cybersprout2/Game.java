@@ -62,7 +62,7 @@ public class Game {
     private final Bitmap nutritionIcon;
     private final Bitmap saturationIcon;
     private final Bitmap pauseIcon;
-
+    private final Bitmap pausedBanner;
     private final Bitmap playIcon;
 
     private final Bitmap cloud4;
@@ -98,12 +98,14 @@ public class Game {
         Bitmap originalNutritionIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.nutrition_icon);
         Bitmap originalPauseIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.pause_button);
         Bitmap originalPlayIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.play_button);
+        Bitmap originalPausedBanner = BitmapFactory.decodeResource(context.getResources(), R.drawable.paused_banner);
 
         this.growthIcon = Bitmap.createScaledBitmap(originalGrowthIcon, logoSize, logoSize, true);
         this.saturationIcon = Bitmap.createScaledBitmap(originalSaturationIcon, logoSize, logoSize, true);
         this.nutritionIcon = Bitmap.createScaledBitmap(originalNutritionIcon, logoSize, logoSize, true);
         this.pauseIcon = Bitmap.createScaledBitmap(originalPauseIcon, logoSize, logoSize, true);
         this.playIcon = Bitmap.createScaledBitmap(originalPlayIcon, logoSize, logoSize, true);
+        this.pausedBanner = Bitmap.createScaledBitmap(originalPausedBanner, originalPausedBanner.getWidth(), originalPausedBanner.getHeight(), true);
 
         int cloudWidth = 200; // Desired width for the cloud images
         int cloudHeight = 150; // Desired height for the cloud images
@@ -344,6 +346,18 @@ public class Game {
 
             // Draw the pause button at the top left corner of the screen
             canvas.drawBitmap(playIcon, playButtonX, playButtonY, null);
+
+            // Calculate the center of the screen
+            float centerX = canvas.getWidth() / 2.0f;
+            float centerY = canvas.getHeight() / 2.0f;
+
+            // Calculate the position to render the pause banner in the centre
+            float pausedBannerX = centerX - (pausedBanner.getWidth() / 2.0f);
+            float pausedBannerY = centerY - (pausedBanner.getHeight() / 2.0f);
+
+            // Draw the paused banner at the top left corner of the screen
+            canvas.drawBitmap(pausedBanner, pausedBannerX, pausedBannerY, null);
+
 
             return;
         }
