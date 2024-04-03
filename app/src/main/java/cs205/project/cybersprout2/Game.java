@@ -222,7 +222,7 @@ public class Game {
 
 
     public void draw() {
-        if (isPaused) return; // Skip drawing if the game is paused
+        // Skip drawing if the game is paused
         if (useCanvas.test(this::draw)) {
             // Your existing drawing logic
         }
@@ -287,6 +287,9 @@ public class Game {
 
     }
     public void handleTouch(MotionEvent event) {
+        if (isPaused) {
+            return;
+        }
         float x = event.getX();
         float y = event.getY();
         int action = event.getActionMasked();

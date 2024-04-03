@@ -43,7 +43,7 @@ public class GameThread extends Thread {
     public void pauseGame() {
         synchronized (pauseLock) {
             isPaused = true;
-            plantManager.pause(); // Pause plant growth
+            game.pauseGame(); // Pause plant growth
         }
     }
 
@@ -51,7 +51,7 @@ public class GameThread extends Thread {
         synchronized (pauseLock) {
             isPaused = false;
             pauseLock.notifyAll();
-            plantManager.resume(); // Resume plant growth
+            game.resumeGame(); // Resume plant growth
         }
     }
     public boolean isPaused() {
