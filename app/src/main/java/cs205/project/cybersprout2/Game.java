@@ -62,6 +62,8 @@ public class Game {
     private final Bitmap nutritionIcon;
     private final Bitmap saturationIcon;
 
+    private final Bitmap pauseIcon;
+
     private final Bitmap cloud4;
     private final List<Cloud> clouds = new ArrayList<>();
     private final boolean cloudsScaled = false;
@@ -93,10 +95,12 @@ public class Game {
         Bitmap originalGrowthIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.growth_icon);
         Bitmap originalSaturationIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.saturation_icon);
         Bitmap originalNutritionIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.nutrition_icon);
+        Bitmap originalPauseIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.pause_button);
 
         this.growthIcon = Bitmap.createScaledBitmap(originalGrowthIcon, logoSize, logoSize, true);
         this.saturationIcon = Bitmap.createScaledBitmap(originalSaturationIcon, logoSize, logoSize, true);
         this.nutritionIcon = Bitmap.createScaledBitmap(originalNutritionIcon, logoSize, logoSize, true);
+        this.pauseIcon = Bitmap.createScaledBitmap(originalPauseIcon, logoSize, logoSize, true);
 
         int cloudWidth = 200; // Desired width for the cloud images
         int cloudHeight = 150; // Desired height for the cloud images
@@ -393,6 +397,14 @@ public class Game {
         // Draw the third line of text and its icon
         canvas.drawText("% " + plant.getNutrition(), statusBarMargin * 2 + 80 + innerMargin, textY, paint);
         canvas.drawBitmap(nutritionIcon, statusBarMargin + innerMargin, iconY, null);
+
+        // Define the position for the pause button at the top left corner of the screen
+        float pauseButtonX = 20; // Adjust the X-coordinate as needed
+        float pauseButtonY = 20; // Adjust the Y-coordinate as needed
+
+        // Draw the pause button at the top left corner of the screen
+        canvas.drawBitmap(pauseIcon, pauseButtonX, pauseButtonY, null);
+
     }
 
     public void updateGameState() {
