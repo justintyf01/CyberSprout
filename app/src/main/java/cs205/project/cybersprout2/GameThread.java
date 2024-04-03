@@ -6,11 +6,9 @@ public class GameThread extends Thread {
     private volatile boolean isRunning = false;
     private final Object pauseLock = new Object();
     private boolean isPaused = false;
-    private final PlantManager plantManager;
 
     public GameThread(Game game) {
         this.game = game;
-        this.plantManager = new PlantManager(game.getPlant());
     }
 
     public void startGame() {
@@ -26,7 +24,7 @@ public class GameThread extends Thread {
 
     @Override
     public void run() {
-        while (isRunning) {
+        while (isRunning && game.isGameReady()) {
             synchronized (pauseLock) {
                 if (isPaused) {
                     try {

@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BackgroundUpdater implements Runnable {
+    private final AtomicBoolean paused = new AtomicBoolean(false);
     private final Background background;
     private final long[] phaseDurations = {15000, 15000, 7500, 15000, 15000, 7500}; // Duration for each phase
     private final int[] colors = { // color of each phase
@@ -19,6 +20,7 @@ public class BackgroundUpdater implements Runnable {
             Color.parseColor("#00008B") // night
     };
 //    private float x = 0, y = 0;
+
     private long startTime;
     private final int screenHeight;
     private final int screenWidth;
@@ -54,13 +56,21 @@ public class BackgroundUpdater implements Runnable {
 
         // Track start of day/night
         long bodyStartTime = System.currentTimeMillis();
-        while (true) { // Ensure continuous update
 
-            /** Calculations for progress of body (sun/moon)
-             * get progress = elapsed time / 37500
-             * bodyX starts from screenWidth
-             * from start to 18750, need to move screenWidth + bitmapWidth = totalLength
-             * bodyX = screenWidth - progress * totalLength */
+        while (true) { // Ensure continuous update
+            if (paused.get()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                /** Calculations for progress of body (sun/moon)
+                 * get progress = elapsed time / 37500
+                 * bodyX starts from screenWidth
+                 * from start to 18750, need to move screenWidth + bitmapWidth = totalLength
+                 * bodyX = screenWidth - progress * totalLength */
+
             double bodyProgress = (double) (System.currentTimeMillis() - bodyStartTime) / dayTime;
             int totalLength = background.getBody().getWidth() + screenWidth;
             bodyX = (float) (screenWidth - bodyProgress * totalLength);
@@ -82,6 +92,10 @@ public class BackgroundUpdater implements Runnable {
             background.setBg(bitmap);
 
         }
+    }
+    }
+    public void setPaused(boolean shouldPause) {
+        paused.set(shouldPause);
     }
 
     // This method calculates the gradient background

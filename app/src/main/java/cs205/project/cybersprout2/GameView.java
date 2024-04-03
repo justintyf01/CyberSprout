@@ -18,7 +18,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     private final Game game;
     private GameThread gameThread;
-    final Handler handler = new Handler();
 
     public GameView(Context context) {
         super(context);
@@ -69,9 +68,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
-        if (gameThread == null || gameThread.getState() == Thread.State.TERMINATED) {
-            gameThread = new GameThread(game);
-            gameThread.startGame();
+        // Check if the game is ready before starting the thread
+        if (game.isGameReady()) {
+            if (gameThread == null || gameThread.getState() == Thread.State.TERMINATED) {
+                gameThread = new GameThread(game);
+                gameThread.startGame();
+            }
         }
     }
 
@@ -103,11 +105,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
-        // Draw game elements here, including the pause button
-        if (game != null) {
+        if (game.isGameReady()) {
+            // Draw the actual game content
             game.draw();
+            drawPauseButton(canvas);
+        } else {
+            // Draw the loading screen
+            drawLoadingScreen(canvas);
         }
-        drawPauseButton(canvas);
     }
 
     private void drawPauseButton(Canvas canvas) {
@@ -118,5 +123,23 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         paint.setColor(Color.BLACK);
         paint.setTextSize(30);
         canvas.drawText(gameThread != null && gameThread.isPaused() ? "Resume" : "Pause", 25, 75, paint);
+    }
+
+    private void drawLoadingScreen(Canvas canvas) {
+        // Fill the canvas with a background color for the loading screen
+        canvas.drawColor(Color.BLACK);
+
+        // Draw the loading text
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(50);
+        paint.setTextAlign(Paint.Align.CENTER);
+
+        // Position the text in the center of the screen
+        float x = canvas.getWidth() / 2f;
+        float y = canvas.getHeight() / 2f;
+
+        // Draw the text
+        canvas.drawText("Loading...", x, y, paint);
     }
 }

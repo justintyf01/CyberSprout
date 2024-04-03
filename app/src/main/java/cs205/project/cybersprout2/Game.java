@@ -65,12 +65,11 @@ public class Game {
     private final Bitmap cloud4;
     private final List<Cloud> clouds = new ArrayList<>();
     private final boolean cloudsScaled = false;
+    private boolean isGameReady = false;
+    private BackgroundUpdater backgroundUpdater;
 
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
-
-
-
         // add this to the parameter if implementing notifications
 //        this.runnable = runnable;
         this.context = context;
@@ -79,8 +78,8 @@ public class Game {
 
         this.background = new Background(context, screenWidth, screenHeight);
         // Start thread to constantly update background values based on real time
-        new Thread(new BackgroundUpdater(background), "Background Color Handler").start();
-
+        this.backgroundUpdater = new BackgroundUpdater(background);
+        new Thread(backgroundUpdater, "BackgroundUpdater").start();
         this.useCanvas = useCanvas;
         plant = new Plant(context);
         this.dropletExecutorService = Executors.newFixedThreadPool(1);
@@ -121,6 +120,7 @@ public class Game {
         clouds.add(new Cloud(context, cloud3, (float) screenWidth / 2, 300, 0.9f)); // Cloud 3
         this.plantManager = new PlantManager(plant);
         new Thread(plantManager, "PlantManager").start();
+        isGameReady = true;
 
     }
 
@@ -170,12 +170,14 @@ public class Game {
         isPaused = true;
         // Pause droplet and fertilizer tasks
         // Note: You'll need to implement a mechanism to pause/resume tasks within these executors or manage tasks directly
-        plantManager.pause(); // Assuming PlantManager has a proper pause mechanism implemented
+        plantManager.pause();
+        backgroundUpdater.setPaused(true);
     }
     public void resumeGame() {
         isPaused = false;
         // Resume droplet and fertilizer tasks
-        plantManager.resume(); // Assuming PlantManager has a proper resume mechanism implemented
+        plantManager.resume();
+        backgroundUpdater.setPaused(false);
     }
 
     public void handleFertiliserTouch (int pointerId, float x, float y, boolean isDown) {
@@ -200,10 +202,6 @@ public class Game {
                         fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
                         fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
 
-//                        // Update all fertilizers' positions
-//                        for (Fertilizer fert : fertilizers) {
-//                            fert.update(screenHeight);
-//                        }
                     } finally {
                         fertilizerLock.unlock();
                     }
@@ -219,28 +217,26 @@ public class Game {
             fertilizerBox = null;
         }
     }
-
-
-    public void draw() {
-        // Skip drawing if the game is paused
-        if (useCanvas.test(this::draw)) {
-            // Your existing drawing logic
-        }
+    public boolean isGameReady(){
+        return isGameReady;
     }
-    public Plant getPlant() {
-        return plant;
+    public void draw() {
+        if (!isGameReady) return;
+        if (isPaused) return;
+        useCanvas.test(this::draw);
     }
 
     // this method does the actual drawing
     public void draw(Canvas canvas) {
+        if (isPaused){
+            return;
+        }
 
         if (canvas == null) {
             return;
         }
         canvas.drawBitmap(background.getBg(), 0,0,null);
         canvas.drawBitmap(background.getBody(), background.getBodyX(), background.getBodyY(), null);
-//        canvas.drawColor(currentColor.get());
-//        canvas.drawColor(Color.GRAY);
         for (TouchObject obj : activeTouches.values()) {
             canvas.drawBitmap(obj.getImage(), obj.getX(), obj.getY(), null);
         }
@@ -251,7 +247,6 @@ public class Game {
             while (dropletIterator.hasNext()) {
                 Droplet d = dropletIterator.next();
                 canvas.drawBitmap(d.getDropletImage(), d.getX(), d.getY(), null);
-                // TODO: can be moved to the executor thread above
                 if (!d.updateDroplet()) {
                     dropletIterator.remove();
                 }
@@ -280,10 +275,6 @@ public class Game {
 
         plantDraw(canvas);
         drawStatusBar(canvas);
-
-//        canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.sun), 0,800
-//                ,null);
-//        canvas.drawBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.moon), 0,0,null);
 
     }
     public void handleTouch(MotionEvent event) {
@@ -325,6 +316,9 @@ public class Game {
         }
     }
     public void plantDraw(Canvas canvas) {
+        if (isPaused){
+            return;
+        }
         float screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
         float screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
         int bitmapWidth = plant.getImageWidth();
@@ -336,6 +330,9 @@ public class Game {
     }
 
     public void drawStatusBar(Canvas canvas) {
+        if (isPaused){
+            return;
+        }
         Paint paint = new Paint();
         paint.setColor(Color.BLACK); // Text color
         paint.setTextSize(45); // Text size
@@ -399,6 +396,9 @@ public class Game {
     }
 
     public void updateGameState() {
+        if (isPaused){
+            return;
+        }
         // Update cloud positions
         for (Cloud cloud : clouds) {
             cloud.update();
