@@ -49,7 +49,7 @@ public class PlantManager implements Runnable {
                 int nutrition = plant.getNutrition();
 
                 // every 5 secs decrease nutrition and saturation
-                if (counter % 50 == 0) {
+                if (counter % 5 == 0) {
                     plant.setNutrition(--nutrition);
                     plant.setSaturation(--saturation);
                 }
@@ -72,7 +72,7 @@ public class PlantManager implements Runnable {
                 }
 
                 counter++;
-                Thread.sleep(5000); // Sleep for 1 seconds
+                Thread.sleep(1000); // Sleep for 1 seconds
             }
 
         } catch (InterruptedException e) {
