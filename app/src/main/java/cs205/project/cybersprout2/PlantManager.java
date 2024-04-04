@@ -49,17 +49,17 @@ public class PlantManager implements Runnable {
                 int nutrition = plant.getNutrition();
 
                 // every 5 secs decrease nutrition and saturation
-                if (counter % 5 == 0) {
+                if (counter % 3 == 0) {
                     plant.setNutrition(--nutrition);
                     plant.setSaturation(--saturation);
                 }
 
                 // check nutrition and saturation
                 if (nutrition > 50 && saturation > 50) {
-                    growth += 1;
-                    plant.setGrowth(++growth);
+                    growth += 5;
+                    plant.setGrowth(growth);
                 } else {
-                    growth -= 2;
+                    growth -= 10;
                     plant.setGrowth(growth);
                 }
 
