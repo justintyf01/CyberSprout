@@ -237,10 +237,6 @@ public class Game {
 
     // this method does the actual drawing
     public void draw(Canvas canvas) {
-        if (isPaused){
-            return;
-        }
-
         if (canvas == null) {
             return;
         }
@@ -355,12 +351,12 @@ public class Game {
             float pausedBannerX = centerX - (pausedBanner.getWidth() / 2.0f);
             float pausedBannerY = centerY - (pausedBanner.getHeight() / 2.0f);
 
-            // Draw the paused banner at the top left corner of the screen
+            // Draw the paused banner at the centre of the screen
             canvas.drawBitmap(pausedBanner, pausedBannerX, pausedBannerY, null);
-
 
             return;
         }
+
         Paint paint = new Paint();
         paint.setColor(Color.BLACK); // Text color
         paint.setTextSize(45); // Text size
