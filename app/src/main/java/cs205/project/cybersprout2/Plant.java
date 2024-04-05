@@ -57,11 +57,14 @@ public class Plant {
     }
 
     public void setSaturation(int saturation) {
-        this.saturation.set(saturation);
+        int sat = Math.max(saturation, 0);
+        this.setSaturation(sat);
     }
 
     public void setNutrition(int nutrition) {
-        this.nutrition.set(nutrition);
+
+        int nut = Math.max(nutrition, 0);
+        this.setNutrition(nut);
     }
 
     public void setGrowth(int growth) {

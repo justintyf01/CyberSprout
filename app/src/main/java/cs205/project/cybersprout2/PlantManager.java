@@ -1,5 +1,7 @@
 package cs205.project.cybersprout2;
 
+import java.util.Random;
+
 public class PlantManager implements Runnable {
     private final Plant plant;
     private final Object pauseLock = new Object();
@@ -50,8 +52,11 @@ public class PlantManager implements Runnable {
 
                 // every 5 secs decrease nutrition and saturation
                 if (counter % 3 == 0) {
-                    plant.setNutrition(--nutrition);
-                    plant.setSaturation(--saturation);
+                    Random dice = new Random();
+                    plant.setNutrition(nutrition - dice.nextInt(10));
+                    plant.setSaturation(saturation - dice.nextInt(10));
+//                    plant.setNutrition(--nutrition);
+//                    plant.setSaturation(--saturation);
                 }
 
                 // check nutrition and saturation
