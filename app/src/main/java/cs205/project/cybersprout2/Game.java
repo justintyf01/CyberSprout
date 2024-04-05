@@ -241,7 +241,7 @@ public class Game {
             return;
         }
         canvas.drawBitmap(background.getBg(), 0,0,null);
-        canvas.drawBitmap(background.getBody(), background.getBodyX(), background.getBodyY(), null);
+        //canvas.drawBitmap(background.getBody(), background.getBodyX(), background.getBodyY(), null);
         for (TouchObject obj : activeTouches.values()) {
             canvas.drawBitmap(obj.getImage(), obj.getX(), obj.getY(), null);
         }

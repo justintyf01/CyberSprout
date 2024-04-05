@@ -105,17 +105,41 @@ public class BackgroundUpdater implements Runnable {
         );
     }
 
-    private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
-        Paint paint = new Paint();
-        float xPosition = screenWidth * (1 - progress); // Invert direction for sun/moon rise
-        float yPosition = (float) (screenHeight * 0.5 * (1 - Math.cos(Math.PI * progress)));
+//    private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
+//        Paint paint = new Paint();
+//        float xPosition = screenWidth * (1 - progress); // Invert direction for sun/moon rise
+//        float yPosition = (float) (screenHeight * 0.5 * (1 - Math.cos(Math.PI * progress)));
+//
+//        int color = isDay ? Color.YELLOW : Color.LTGRAY;
+//        int radius = isDay ? 80 : 100; // Bigger sun and moon
+//
+//        paint.setColor(color);
+//        canvas.drawCircle(xPosition, yPosition, radius, paint);
+//    }
+private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
+    // Calculate the position of the sun/moon
+    float xPosition = screenWidth * (1 - progress); // Invert direction for sun/moon rise
+    float yPosition = (float) (screenHeight * 0.5 * (1 - Math.cos(Math.PI * progress)));
 
-        int color = isDay ? Color.YELLOW : Color.LTGRAY;
-        int radius = isDay ? 80 : 100; // Bigger sun and moon
+    // Get the appropriate celestial body bitmap from the background object
+    Bitmap celestialBodyBitmap = background.getBody();
 
-        paint.setColor(color);
-        canvas.drawCircle(xPosition, yPosition, radius, paint);
-    }
+    // Calculate the size of the celestial body
+    int width = celestialBodyBitmap.getWidth();
+    int height = celestialBodyBitmap.getHeight();
+
+    // Calculate the position where the bitmap will be drawn
+    float left = xPosition - width / 2;
+    float top = yPosition - height / 2;
+
+    // Draw the bitmap at the calculated position
+    canvas.drawBitmap(celestialBodyBitmap, left, top, null);
+
+    // Update the Background class with the current celestial body position
+    background.setBodyX(left + celestialBodyBitmap.getWidth() / 2);
+    background.setBodyY(top + celestialBodyBitmap.getHeight() / 2);
+    background.setDay(isDay);
+}
 
     private void drawStars(Canvas canvas, long elapsedTime) {
         Paint paint = new Paint();
