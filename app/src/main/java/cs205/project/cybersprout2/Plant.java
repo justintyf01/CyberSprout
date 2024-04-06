@@ -57,16 +57,14 @@ public class Plant {
     }
 
     public void setSaturation(int saturation) {
-        int sat = Math.max(saturation, 0);
-        this.setSaturation(sat);
+        int sat = Math.max(saturation, 0); // Ensure saturation is not negative
+        this.saturation.set(sat); // Correctly update the atomic integer
     }
 
     public void setNutrition(int nutrition) {
-
-        int nut = Math.max(nutrition, 0);
-        this.setNutrition(nut);
+        int nut = Math.max(nutrition, 0); // Ensure nutrition is not negative
+        this.nutrition.set(nut); // Correctly update the atomic integer
     }
-
     public void setGrowth(int growth) {
         this.growth.set(growth);
     }
