@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+
 public class BackgroundUpdater implements Runnable {
     private final AtomicBoolean paused = new AtomicBoolean(false);
     private final Background background;
@@ -34,7 +35,7 @@ public class BackgroundUpdater implements Runnable {
         Random rand = new Random();
         for (int i = 0; i < 100; i++) { // Generate 100 stars at random positions
             int x = rand.nextInt(screenWidth);
-            int y = rand.nextInt(screenHeight / 2); // Limit stars to the top half of the screen
+            int y = rand.nextInt(screenHeight);
             stars.add(new Star(x, y));
         }
     }
@@ -70,15 +71,13 @@ public class BackgroundUpdater implements Runnable {
         Bitmap bitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
-        // Interpolate the background color
         float progress = (float) elapsedTime / dayDuration;
+        // Adjust for a smoother transition based on the sun's position
         int backgroundColor = interpolateBackgroundColor(progress, isDay);
         canvas.drawColor(backgroundColor);
 
-        // Draw sun or moon
         drawCelestialBody(canvas, progress, isDay);
 
-        // Draw stars if it's night
         if (!isDay) {
             drawStars(canvas, elapsedTime);
         }
@@ -87,22 +86,50 @@ public class BackgroundUpdater implements Runnable {
     }
 
     private int interpolateBackgroundColor(float progress, boolean isDay) {
-        // Define colors for day and night
-        int dayColor = Color.parseColor("#87CEEB");
-        int nightColor = Color.parseColor("#000033");
+        // Early return if it's night
+        if (!isDay) {
+            return Color.parseColor("#000033"); // Dark blue for night
+        }
 
+        // Calculate the sun's position for a smooth transition
+        float sunPosition = (float) Math.cos(progress * Math.PI * 2);
+        float sunsetStart = 0.65f; // Start transition to sunset at 70% of the day
+        float sunsetEnd = 0.85f; // End transition to sunset at 85% of the day
 
-        // Calculate interpolation factor
-        float factor = isDay ? progress : 1 - progress;
+        int dayColor = Color.parseColor("#87CEEB"); // Light blue
+        int sunsetColor = Color.parseColor("#FF8C00"); // Orange
+        int nightColor = Color.parseColor("#000033"); // Dark blue
 
-        // Smooth transition near sunrise and sunset
-        factor = (float) Math.cos(factor * Math.PI) / 2.0f + 0.5f;
+        if (progress <= sunsetStart) {
+            return dayColor;
+        } else if (progress <= sunsetEnd) {
+            // Calculate progress between sunsetStart and sunsetEnd
+            float sunsetProgress = (progress - sunsetStart) / (sunsetEnd - sunsetStart);
+            return interpolateColor(dayColor, sunsetColor, sunsetProgress);
+        } else {
+            // Night is approaching, smoothly transition to nightColor
+            float nightProgress = (progress - sunsetEnd) / (1 - sunsetEnd);
+            return interpolateColor(sunsetColor, nightColor, nightProgress);
+        }
+    }
 
-        return Color.rgb(
-                (int) (Color.red(dayColor) * factor + Color.red(nightColor) * (1 - factor)),
-                (int) (Color.green(dayColor) * factor + Color.green(nightColor) * (1 - factor)),
-                (int) (Color.blue(dayColor) * factor + Color.blue(nightColor) * (1 - factor))
-        );
+    private int interpolateColor(int colorStart, int colorEnd, float progress) {
+        int alphaStart = Color.alpha(colorStart);
+        int redStart = Color.red(colorStart);
+        int greenStart = Color.green(colorStart);
+        int blueStart = Color.blue(colorStart);
+
+        int alphaEnd = Color.alpha(colorEnd);
+        int redEnd = Color.red(colorEnd);
+        int greenEnd = Color.green(colorEnd);
+        int blueEnd = Color.blue(colorEnd);
+
+        int alpha = (int) (alphaStart * (1 - progress) + alphaEnd * progress);
+        int red = (int) (redStart * (1 - progress) + redEnd * progress);
+        int green = (int) (greenStart * (1 - progress) + greenEnd * progress);
+        int blue = (int) (blueStart * (1 - progress) + blueEnd * progress);
+
+        return Color.argb(alpha, red, green, blue);
     }
 
 //    private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
