@@ -2,6 +2,8 @@ package cs205.project.cybersprout2;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.WindowManager;
+import android.widget.LinearLayout;
 
 public class GameActivity extends Activity {
     private GameView gameView;
@@ -10,6 +12,20 @@ public class GameActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         gameView = new GameView(this);
+
+//        // get rid of bar
+//        getWindow().setFlags(
+//                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+//                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+//        );
+//
+//        // Set layout parameters to fill the entire screen
+//        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+//                LinearLayout.LayoutParams.MATCH_PARENT,
+//                LinearLayout.LayoutParams.MATCH_PARENT
+//        );
+//        gameView.setLayoutParams(layoutParams);
+
         setContentView(gameView);
     }
 

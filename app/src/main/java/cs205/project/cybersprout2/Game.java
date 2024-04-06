@@ -71,6 +71,13 @@ public class Game {
     private boolean isGameReady = false;
     private BackgroundUpdater backgroundUpdater;
 
+    // fps
+    private Paint fpsPaint;
+    private long fps = 0;
+
+    public void setFps(long fps) {
+        this.fps = fps;
+    }
 
     public Game(Context context, final Predicate<Consumer<Canvas>> useCanvas) {
         // add this to the parameter if implementing notifications
@@ -130,7 +137,6 @@ public class Game {
         this.plantManager = new PlantManager(plant);
         new Thread(plantManager, "PlantManager").start();
         isGameReady = true;
-
     }
 
     // maybe can refactor this method with the fertilizer box method
@@ -160,7 +166,7 @@ public class Game {
                         }
                     }
                     try {
-                        Thread.sleep(50);
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
@@ -205,8 +211,8 @@ public class Game {
                         float fertilizerY = fertilizerBox.getY() + 175; // Starting Y position
 
 //                        Fertilizer fertilizer = new Fertilizer(context, fertilizerX, fertilizerY);
-                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
-                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
+//                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
+//                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
                         fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
                         fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
                         fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
@@ -215,7 +221,7 @@ public class Game {
                         fertilizerLock.unlock();
                     }
                     try {
-                        Thread.sleep(50); // Control the speed of falling
+                        Thread.sleep(100); // Control the speed of falling
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
@@ -232,6 +238,12 @@ public class Game {
     public void draw() {
         if (!isGameReady) return;
         if (isPaused) return;
+
+        // Initialize paint for FPS counter
+        fpsPaint = new Paint();
+        fpsPaint.setColor(Color.WHITE);
+        fpsPaint.setTextSize(40);
+
         useCanvas.test(this::draw);
     }
 
@@ -280,45 +292,7 @@ public class Game {
 
         plantDraw(canvas);
         drawStatusBar(canvas);
-
-    }
-    public void handleTouch(MotionEvent event) {
-        if (isPaused) {
-            return;
-        }
-        float x = event.getX();
-        float y = event.getY();
-        int action = event.getActionMasked();
-        int pointerId = event.getPointerId(event.getActionIndex());
-
-        switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                // Start watering or fertilizing based on the side of the screen touched
-                if (x < (float) screenHeight / 2) {
-                    handleWateringCanTouch(pointerId, x, y, true);
-                } else {
-                    handleFertiliserTouch(pointerId, x, y, true);
-                }
-                break;
-            case MotionEvent.ACTION_MOVE:
-                // Update position for watering or fertilizing
-                if (activeTouches.containsKey(pointerId)) {
-                    // Update the touch object's position
-                    TouchObject touchObject = activeTouches.get(pointerId);
-                    if (touchObject instanceof WateringCan) {
-                        handleWateringCanTouch(pointerId, x, y, true);
-                    } else if (touchObject instanceof FertilizerBox) {
-                        handleFertiliserTouch(pointerId, x, y, true);
-                    }
-                }
-                break;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                // Stop watering or fertilizing
-                handleWateringCanTouch(pointerId, x, y, false);
-                handleFertiliserTouch(pointerId, x, y, false);
-                break;
-        }
+        drawFPS(canvas);
     }
     public void plantDraw(Canvas canvas) {
         if (isPaused){
@@ -424,7 +398,11 @@ public class Game {
 
         // Draw the pause button at the top left corner of the screen
         canvas.drawBitmap(pauseIcon, pauseButtonX, pauseButtonY, null);
+    }
 
+    public void drawFPS(Canvas canvas) {
+
+        canvas.drawText("FPS: " + fps, 880, 40, fpsPaint);
     }
 
     public void updateGameState() {

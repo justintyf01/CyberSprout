@@ -7,12 +7,19 @@ public class GameThread extends Thread {
     private final Object pauseLock = new Object();
     private boolean isPaused = false;
 
+    // fps
+    private static final long FPS_INTERVAL = 1000;
+    private long frameCount = 0;
+    private long startTime = 0;
+    private long fps = 0;
+
     public GameThread(Game game) {
         this.game = game;
     }
 
     public void startGame() {
         isRunning = true;
+
         start();
     }
 
@@ -25,6 +32,8 @@ public class GameThread extends Thread {
     @Override
     public void run() {
         while (isRunning && game.isGameReady()) {
+
+            // for pause
             synchronized (pauseLock) {
                 if (isPaused) {
                     try {
@@ -34,7 +43,29 @@ public class GameThread extends Thread {
                     }
                 }
             }
+
+            long currentTime = System.currentTimeMillis();
+            if (startTime == 0) {
+                startTime = currentTime;
+            }
+
+            // Calculate FPS
+            frameCount++;
+            if (currentTime - startTime >= FPS_INTERVAL) {
+                fps = (long) (frameCount / ((currentTime - startTime) / 1000.0));
+                game.setFps(fps);
+                frameCount = 0;
+                startTime = currentTime;
+            }
+
             game.draw();
+
+            // sleep to control fps
+            try {
+                sleep(8);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

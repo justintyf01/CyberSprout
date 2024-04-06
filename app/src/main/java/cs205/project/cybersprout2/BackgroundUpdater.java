@@ -10,11 +10,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-
 public class BackgroundUpdater implements Runnable {
     private final AtomicBoolean paused = new AtomicBoolean(false);
     private final Background background;
-    private final long dayDuration = 30000; // Duration for a full day-night cycle in milliseconds
+    private final long dayDuration = 120000; // Duration for a full day-night cycle in milliseconds
     private final int screenHeight;
     private final int screenWidth;
     private long startTime;
@@ -60,7 +59,7 @@ public class BackgroundUpdater implements Runnable {
             background.setBg(updatedBackground);
 
             try {
-                Thread.sleep(50);
+                Thread.sleep(16);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -85,88 +84,137 @@ public class BackgroundUpdater implements Runnable {
         return bitmap;
     }
 
-    private int interpolateBackgroundColor(float progress, boolean isDay) {
-        // Early return if it's night
-        if (!isDay) {
-            return Color.parseColor("#000033"); // Dark blue for night
-        }
-
-        // Calculate the sun's position for a smooth transition
-        float sunPosition = (float) Math.cos(progress * Math.PI * 2);
-        float sunsetStart = 0.65f; // Start transition to sunset at 70% of the day
-        float sunsetEnd = 0.85f; // End transition to sunset at 85% of the day
-
-        int dayColor = Color.parseColor("#87CEEB"); // Light blue
-        int sunsetColor = Color.parseColor("#FF8C00"); // Orange
-        int nightColor = Color.parseColor("#000033"); // Dark blue
-
-        if (progress <= sunsetStart) {
-            return dayColor;
-        } else if (progress <= sunsetEnd) {
-            // Calculate progress between sunsetStart and sunsetEnd
-            float sunsetProgress = (progress - sunsetStart) / (sunsetEnd - sunsetStart);
-            return interpolateColor(dayColor, sunsetColor, sunsetProgress);
-        } else {
-            // Night is approaching, smoothly transition to nightColor
-            float nightProgress = (progress - sunsetEnd) / (1 - sunsetEnd);
-            return interpolateColor(sunsetColor, nightColor, nightProgress);
-        }
-    }
-
-    private int interpolateColor(int colorStart, int colorEnd, float progress) {
-        int alphaStart = Color.alpha(colorStart);
-        int redStart = Color.red(colorStart);
-        int greenStart = Color.green(colorStart);
-        int blueStart = Color.blue(colorStart);
-
-        int alphaEnd = Color.alpha(colorEnd);
-        int redEnd = Color.red(colorEnd);
-        int greenEnd = Color.green(colorEnd);
-        int blueEnd = Color.blue(colorEnd);
-
-        int alpha = (int) (alphaStart * (1 - progress) + alphaEnd * progress);
-        int red = (int) (redStart * (1 - progress) + redEnd * progress);
-        int green = (int) (greenStart * (1 - progress) + greenEnd * progress);
-        int blue = (int) (blueStart * (1 - progress) + blueEnd * progress);
-
-        return Color.argb(alpha, red, green, blue);
-    }
-
-//    private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
-//        Paint paint = new Paint();
-//        float xPosition = screenWidth * (1 - progress); // Invert direction for sun/moon rise
-//        float yPosition = (float) (screenHeight * 0.5 * (1 - Math.cos(Math.PI * progress)));
+//    private int interpolateBackgroundColor(float progress, boolean isDay) {
+//        // Early return if it's night
+//        if (!isDay) {
+//            return Color.parseColor("#000033"); // Dark blue for night
+//        }
 //
-//        int color = isDay ? Color.YELLOW : Color.LTGRAY;
-//        int radius = isDay ? 80 : 100; // Bigger sun and moon
+//        // Calculate the sun's position for a smooth transition
+//        float sunsetStart = 0.65f; // Start transition to sunset at 70% of the day
+//        float sunsetEnd = 0.85f; // End transition to sunset at 85% of the day
 //
-//        paint.setColor(color);
-//        canvas.drawCircle(xPosition, yPosition, radius, paint);
+//        int dayColor = Color.parseColor("#87CEEB"); // Light blue
+//        int sunsetColor = Color.parseColor("#FF8C00"); // Orange
+//        int nightColor = Color.parseColor("#000033"); // Dark blue
+//
+//        if (progress <= sunsetStart) {
+//            return dayColor;
+//        } else if (progress <= sunsetEnd) {
+//            // Calculate progress between sunsetStart and sunsetEnd
+//            float sunsetProgress = (progress - sunsetStart) / (sunsetEnd - sunsetStart);
+//            return interpolateColors(dayColor, sunsetColor, sunsetProgress);
+//        } else {
+//            // Night is approaching, smoothly transition to nightColor
+//            float nightProgress = (progress - sunsetEnd) / (1 - sunsetEnd);
+//            return interpolateColors(sunsetColor, nightColor, nightProgress);
+//        }
 //    }
-private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
-    // Calculate the position of the sun/moon
-    float xPosition = screenWidth * (1 - progress); // Invert direction for sun/moon rise
-    float yPosition = (float) (screenHeight * 0.5 * (1 - Math.cos(Math.PI * progress)));
 
-    // Get the appropriate celestial body bitmap from the background object
-    Bitmap celestialBodyBitmap = background.getBody();
+    private int interpolateBackgroundColor(float progress, boolean isDay) {
+        // Define colors for sunrise, brightest day, sunset, and darkest night
+        int sunriseColor = Color.parseColor("#FFDAB9");    // Sunrise color (Orange)
+        int brightestDayColor = Color.parseColor("#87CEEB"); // Brightest day color (Sky Blue)
+        int sunsetColor = Color.parseColor("#663399");      // Sunset color (Orange Red)
+        int darkestNightColor = Color.parseColor("#000000"); // Darkest night color (Dark Blue)
 
-    // Calculate the size of the celestial body
-    int width = celestialBodyBitmap.getWidth();
-    int height = celestialBodyBitmap.getHeight();
+        // Calculate the background color based on isDay and progress
+        if (isDay) {
+            // Daytime background interpolation
+            if (progress <= 0.5f) {
+                // Interpolate from sunrise to brightest day color
+                return interpolateColors(sunriseColor, brightestDayColor, progress / 0.5f);
+            } else {
+                // Interpolate from brightest day color to sunset
+                return interpolateColors(brightestDayColor, sunsetColor, (progress - 0.5f) / 0.5f);
+            }
+        } else {
+            // Nighttime background interpolation
+            if (progress <= 0.5f) {
+                // Interpolate from sunset to darkest night color
+                return interpolateColors(sunsetColor, darkestNightColor, progress / 0.5f);
+            } else {
+                // Interpolate from darkest night color to sunrise
+                return interpolateColors(darkestNightColor, sunriseColor, (progress - 0.5f) / 0.5f);
+            }
+        }
+    }
 
-    // Calculate the position where the bitmap will be drawn
-    float left = xPosition - width / 2;
-    float top = yPosition - height / 2;
+//    private int interpolateColors(int colorStart, int colorEnd, float progress) {
+//        int alphaStart = Color.alpha(colorStart);
+//        int redStart = Color.red(colorStart);
+//        int greenStart = Color.green(colorStart);
+//        int blueStart = Color.blue(colorStart);
+//
+//        int alphaEnd = Color.alpha(colorEnd);
+//        int redEnd = Color.red(colorEnd);
+//        int greenEnd = Color.green(colorEnd);
+//        int blueEnd = Color.blue(colorEnd);
+//
+//        int alpha = (int) (alphaStart * (1 - progress) + alphaEnd * progress);
+//        int red = (int) (redStart * (1 - progress) + redEnd * progress);
+//        int green = (int) (greenStart * (1 - progress) + greenEnd * progress);
+//        int blue = (int) (blueStart * (1 - progress) + blueEnd * progress);
+//
+//        return Color.argb(alpha, red, green, blue);
+//    }
 
-    // Draw the bitmap at the calculated position
-    canvas.drawBitmap(celestialBodyBitmap, left, top, null);
+    // Helper method to interpolate between two colors based on a factor (0 to 1)
+    private int interpolateColors(int colorStart, int colorEnd, float factor) {
+        int startA = (colorStart >> 24) & 0xff;
+        int startR = (colorStart >> 16) & 0xff;
+        int startG = (colorStart >> 8) & 0xff;
+        int startB = colorStart & 0xff;
 
-    // Update the Background class with the current celestial body position
-    background.setBodyX(left + celestialBodyBitmap.getWidth() / 2);
-    background.setBodyY(top + celestialBodyBitmap.getHeight() / 2);
-    background.setDay(isDay);
-}
+        int endA = (colorEnd >> 24) & 0xff;
+        int endR = (colorEnd >> 16) & 0xff;
+        int endG = (colorEnd >> 8) & 0xff;
+        int endB = colorEnd & 0xff;
+
+        int interpolatedA = (int) (startA + (endA - startA) * factor);
+        int interpolatedR = (int) (startR + (endR - startR) * factor);
+        int interpolatedG = (int) (startG + (endG - startG) * factor);
+        int interpolatedB = (int) (startB + (endB - startB) * factor);
+
+        return (interpolatedA << 24) | (interpolatedR << 16) | (interpolatedG << 8) | interpolatedB;
+    }
+
+    // sun peaks at progress = 0.5 now
+    private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
+        // Calculate the position of the sun/moon
+    //    float xPosition = screenWidth * (1 - progress); // Invert direction for sun/moon rise
+    //    float yPosition = (float) (screenHeight * 0.5 * (1 - Math.cos(Math.PI * progress)));
+
+        float x_center = screenWidth / 2; // Center of the screen horizontally
+        float y_center = screenHeight; // Center of the screen vertically
+        float r = (float) (screenHeight * 0.8); // You need to define the radius of the circular path
+
+        // Calculate the angle theta based on progress (progress ranges from 0 to 1 for a full cycle)
+        float theta = (float) ((progress + 0.25) * 2 * Math.PI); // Progress converted to radians
+
+        // Calculate the x and y coordinates of the sun
+        float xPosition = x_center + r * (float) Math.cos(theta);
+        float yPosition = y_center + r * (float) Math.sin(theta);
+
+        // Get the appropriate celestial body bitmap from the background object
+        Bitmap celestialBodyBitmap = background.getBody();
+
+        // Calculate the size of the celestial body
+        int width = celestialBodyBitmap.getWidth();
+        int height = celestialBodyBitmap.getHeight();
+
+        // Calculate the position where the bitmap will be drawn
+        float left = xPosition - width / 2;
+        float top = yPosition - height / 2;
+
+        // Draw the bitmap at the calculated position
+        canvas.drawBitmap(celestialBodyBitmap, left, top, null);
+
+        // Update the Background class with the current celestial body position
+        background.setBodyX(left + celestialBodyBitmap.getWidth() / 2);
+        background.setBodyY(top + celestialBodyBitmap.getHeight() / 2);
+        background.setDay(isDay);
+    }
 
     private void drawStars(Canvas canvas, long elapsedTime) {
         Paint paint = new Paint();
@@ -183,14 +231,13 @@ private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
         }
     }
 
-
     public void setPaused(boolean shouldPause) {
         if (shouldPause) {
             paused.set(true);
             pauseStartTime = System.currentTimeMillis(); // Mark the pause start time
         } else {
             if (paused.getAndSet(false)) { // Ensure we only calculate if it was previously paused
-                totalPauseDuration += System.currentTimeMillis() - pauseStartTime; // Update total pause duration
+                totalPauseDuration += (System.currentTimeMillis() - pauseStartTime); // Update total pause duration
             }
             synchronized (paused) {
                 paused.notifyAll();

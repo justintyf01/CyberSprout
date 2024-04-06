@@ -14,7 +14,6 @@ public class Plant {
     private final AtomicInteger saturation = new AtomicInteger(100);
     private final AtomicInteger nutrition = new AtomicInteger(100);
     private final AtomicInteger growth = new AtomicInteger();
-    private boolean isPaused = false; // Flag to track pause state
     Resources res;
     String packageName;
 
@@ -53,6 +52,7 @@ public class Plant {
     }
 
     public void setStage(int stage) {
+        stage = Math.max(0, stage);
         this.stage.set(stage);
     }
 
@@ -79,23 +79,5 @@ public class Plant {
 
     public int getGrowth() {
         return growth.get();
-    }
-
-    // Update plant growth based on pause state
-    public void updateGrowth() {
-        if (!isPaused) {
-            int currentGrowth = growth.get();
-            growth.set(currentGrowth >= 100 ? 100 : currentGrowth + 1);
-        }
-    }
-
-    // Method to pause the plant growth
-    public void pauseGrowth() {
-        isPaused = true;
-    }
-
-    // Method to resume the plant growth
-    public void resumeGrowth() {
-        isPaused = false;
     }
 }
