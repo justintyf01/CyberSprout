@@ -62,6 +62,7 @@ public class Game implements GameResultListener {
     private boolean isGameReady = false;
     private boolean isGameOver = false;
     private boolean isGameWon = false;
+    private int currentStageNumber = 0;
 
     private BackgroundUpdater backgroundUpdater;
 
@@ -247,6 +248,10 @@ public class Game implements GameResultListener {
         isGameWon = true;
     }
 
+    public void currentStage(int stage) {
+        currentStageNumber = stage;
+    }
+
     // this method does the actual drawing
     public void draw(Canvas canvas) {
         if (canvas == null) {
@@ -375,7 +380,7 @@ public class Game implements GameResultListener {
         int statusBarHeight = 390; // Height of the status bar background
 
         // Draw the rounded rectangle background with the vertical shift
-        canvas.drawRoundRect(statusBarMargin, statusBarMargin + verticalShift, statusBarWidth, statusBarHeight + statusBarMargin + verticalShift, cornerRadius, cornerRadius, bgPaint);
+        canvas.drawRoundRect(statusBarMargin, statusBarMargin + verticalShift, statusBarWidth, statusBarHeight + statusBarMargin + verticalShift + 60, cornerRadius, cornerRadius, bgPaint);
 
         // Set up text drawing properties
         Paint.FontMetrics fontMetrics = paint.getFontMetrics();
@@ -414,6 +419,13 @@ public class Game implements GameResultListener {
         // Draw the third line of text and its icon
         canvas.drawText("% " + plant.getNutrition(), statusBarMargin * 2 + 80 + innerMargin, textY, paint);
         canvas.drawBitmap(nutritionIcon, statusBarMargin + innerMargin, iconY, null);
+
+        // Increment the Y position for the next line
+        iconY += lineSpacing;
+
+        // Draw the fourth line of text
+        canvas.drawText("Stage " + currentStageNumber + "/7", statusBarMargin + innerMargin, iconY, paint);
+
 
         // Define the position for the pause button at the top left corner of the screen
         float pauseButtonX = 20; // Adjust the X-coordinate as needed

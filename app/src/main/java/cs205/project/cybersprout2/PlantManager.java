@@ -77,6 +77,7 @@ public class PlantManager implements Runnable {
                         return;
                     }
                     plant.setStage(stage);
+                    gameResultListener.currentStage(stage);
 
                 } else if (growth < 0) {
                     int stage = plant.getStage();
