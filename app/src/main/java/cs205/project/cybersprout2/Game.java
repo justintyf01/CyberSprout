@@ -1,6 +1,5 @@
 package cs205.project.cybersprout2;
 
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -269,6 +268,7 @@ public class Game implements GameOverListener {
 
             return; // Don't draw anything else if the game is over
         }
+
         canvas.drawBitmap(background.getBg(), 0,0,null);
         //canvas.drawBitmap(background.getBody(), background.getBodyX(), background.getBodyY(), null);
         for (TouchObject obj : activeTouches.values()) {
@@ -310,11 +310,16 @@ public class Game implements GameOverListener {
         plantDraw(canvas);
         drawStatusBar(canvas);
         drawFPS(canvas);
-    }
-    public void plantDraw(Canvas canvas) {
-        if (isPaused){
-            return;
+
+        if (isPaused) {
+            drawPauseBanner(canvas);
         }
+    }
+
+    public void plantDraw(Canvas canvas) {
+//        if (isPaused){
+//            return;
+//        }
         float screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
         float screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
         int bitmapWidth = plant.getImageWidth();
@@ -326,25 +331,8 @@ public class Game implements GameOverListener {
     }
 
     public void drawStatusBar(Canvas canvas) {
+
         if (isPaused){
-            // Define the position for the pause button at the top left corner of the screen
-            float playButtonX = 20; // Adjust the X-coordinate as needed
-            float playButtonY = 20; // Adjust the Y-coordinate as needed
-
-            // Draw the pause button at the top left corner of the screen
-            canvas.drawBitmap(playIcon, playButtonX, playButtonY, null);
-
-            // Calculate the center of the screen
-            float centerX = canvas.getWidth() / 2.0f;
-            float centerY = canvas.getHeight() / 2.0f;
-
-            // Calculate the position to render the pause banner in the centre
-            float pausedBannerX = centerX - (pausedBanner.getWidth() / 2.0f);
-            float pausedBannerY = centerY - (pausedBanner.getHeight() / 2.0f);
-
-            // Draw the paused banner at the centre of the screen
-            canvas.drawBitmap(pausedBanner, pausedBannerX, pausedBannerY, null);
-
             return;
         }
 
@@ -415,6 +403,26 @@ public class Game implements GameOverListener {
 
         // Draw the pause button at the top left corner of the screen
         canvas.drawBitmap(pauseIcon, pauseButtonX, pauseButtonY, null);
+    }
+
+    private void drawPauseBanner(Canvas canvas) {
+        // Define the position for the pause button at the top left corner of the screen
+        float playButtonX = 20; // Adjust the X-coordinate as needed
+        float playButtonY = 20; // Adjust the Y-coordinate as needed
+
+        // Draw the pause button at the top left corner of the screen
+        canvas.drawBitmap(playIcon, playButtonX, playButtonY, null);
+
+        // Calculate the center of the screen
+        float centerX = canvas.getWidth() / 2.0f;
+        float centerY = canvas.getHeight() / 2.0f;
+
+        // Calculate the position to render the pause banner in the centre
+        float pausedBannerX = centerX - (pausedBanner.getWidth() / 2.0f);
+        float pausedBannerY = centerY - (pausedBanner.getHeight() / 2.0f);
+
+        // Draw the paused banner at the centre of the screen
+        canvas.drawBitmap(pausedBanner, pausedBannerX, pausedBannerY, null);
     }
 
     public void drawFPS(Canvas canvas) {
