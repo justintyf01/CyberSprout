@@ -23,22 +23,18 @@ import java.util.concurrent.Executors;
 import android.graphics.Paint;
 import android.view.MotionEvent;
 
-public class Game {
+public class Game implements GameOverListener {
+
     /************************** SYSTEM **************************/
     private final Context context;
     private final Predicate<Consumer<Canvas>> useCanvas;
     private final int screenHeight;
-
+    private GameOverListener gameOverListener;
     public BackgroundUpdater updater;
     /************************* BACKGROUND *************************/
     private final Background background;
-    private long startTime = System.currentTimeMillis();
-    private AtomicInteger currentColor = new AtomicInteger(Color.parseColor("#87CEEB"));
-    private boolean isSun;
     private final Bitmap sun;
     private final Bitmap moon;
-    private float bodyX;
-    private float bodyY;
 
     /*************************** PLANT ***************************/
     private final Plant plant;
@@ -69,6 +65,7 @@ public class Game {
     private final List<Cloud> clouds = new ArrayList<>();
     private final boolean cloudsScaled = false;
     private boolean isGameReady = false;
+    private boolean isGameOver = false;
     private BackgroundUpdater backgroundUpdater;
 
     // fps
@@ -134,7 +131,7 @@ public class Game {
         clouds.add(new Cloud(context, cloud1, 0, 200, -1.2f)); // Cloud 1
         clouds.add(new Cloud(context, cloud2, screenWidth, 100, 1.1f)); // Cloud 2
         clouds.add(new Cloud(context, cloud3, (float) screenWidth / 2, 300, 0.9f)); // Cloud 3
-        this.plantManager = new PlantManager(plant);
+        this.plantManager = new PlantManager(plant,this);
         new Thread(plantManager, "PlantManager").start();
         isGameReady = true;
     }
@@ -246,11 +243,31 @@ public class Game {
 
         useCanvas.test(this::draw);
     }
+    public void onGameOver() {
+        isGameOver = true;
+    }
 
     // this method does the actual drawing
     public void draw(Canvas canvas) {
         if (canvas == null) {
             return;
+        }
+        if (isGameOver) {
+            // Draw a semi-transparent overlay to dim the game background
+            Paint overlayPaint = new Paint();
+            overlayPaint.setColor(Color.argb(150, 0, 0, 0)); // Semi-transparent black
+            canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), overlayPaint);
+
+            // Display game over text
+            Paint textPaint = new Paint();
+            textPaint.setTextSize(100);
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            float centerX = canvas.getWidth() / 2.0f;
+            float centerY = canvas.getHeight() / 2.0f;
+            canvas.drawText("Game Over", centerX, centerY, textPaint);
+
+            return; // Don't draw anything else if the game is over
         }
         canvas.drawBitmap(background.getBg(), 0,0,null);
         //canvas.drawBitmap(background.getBody(), background.getBodyX(), background.getBodyY(), null);

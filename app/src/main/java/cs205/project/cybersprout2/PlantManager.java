@@ -6,10 +6,11 @@ public class PlantManager implements Runnable {
     private final Plant plant;
     private final Object pauseLock = new Object();
     private boolean isPaused = false;
+    private final GameOverListener gameOverListener;
 
-
-    public PlantManager(Plant plant) {
+    public PlantManager(Plant plant, GameOverListener gameOverListener) {
         this.plant = plant;
+        this.gameOverListener = gameOverListener; // Initialize it here
     }
 
     public void pause() {
@@ -72,16 +73,31 @@ public class PlantManager implements Runnable {
                     int stage = plant.getStage();
                     stage++;
                     plant.setStage(stage);
-
-                } else if (growth < 0) {
-                    plant.setGrowth(90);
-                    int stage = plant.getStage();
-                    if (stage != 0) {
-                        plant.setGrowth(90);
+                } else{
+                    if (growth <= 0) {
+                        int stage = plant.getStage();
+                        if (stage == 0 ){
+                        plant.setGrowth(0); // Ensure growth doesn't go below zero
+                        gameOverListener.onGameOver(); // Notify the Game class
+                        return;
+                        }
+                        else{
+                            plant.setGrowth(100);
+                            stage--;
+                            plant.setStage(stage);
+                        }
                     }
-                    stage--;
-                    plant.setStage(stage);
                 }
+
+//                } else if (growth < 0) {
+//                    plant.setGrowth(90);
+//                    int stage = plant.getStage();
+//                    if (stage != 0) {
+//                        plant.setGrowth(90);
+//                    }
+//                    stage--;
+//                    plant.setStage(stage);
+//                }
 
                 counter++;
                 Thread.sleep(1000); // Sleep for 1 seconds
