@@ -23,7 +23,6 @@ public class MainActivity extends Activity {
 
     public void buttonClicked(View view) {
         Intent indent = new Intent(this, GameActivity.class);
-//        MediaPlayerManager.playBackgroundMusic(MainActivity.this, R.raw.lol3);
         startActivity(indent);
     }
 }

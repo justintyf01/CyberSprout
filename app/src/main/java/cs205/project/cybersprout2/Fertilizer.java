@@ -9,7 +9,7 @@ import java.util.Random;
 
 public class Fertilizer {
     private float x, y;
-//    private final int color = Color.rgb(165, 42, 42); // Brown color for fertilizer
+
     private final Paint paint;
 
     public Fertilizer(Context context, float x, float y) {

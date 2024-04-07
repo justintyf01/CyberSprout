@@ -13,19 +13,6 @@ public class GameActivity extends Activity {
         super.onCreate(savedInstanceState);
         gameView = new GameView(this);
 
-//        // get rid of bar
-//        getWindow().setFlags(
-//                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-//                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-//        );
-//
-//        // Set layout parameters to fill the entire screen
-//        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-//                LinearLayout.LayoutParams.MATCH_PARENT,
-//                LinearLayout.LayoutParams.MATCH_PARENT
-//        );
-//        gameView.setLayoutParams(layoutParams);
-
         setContentView(gameView);
     }
 

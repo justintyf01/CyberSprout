@@ -80,7 +80,6 @@ public class BackgroundUpdater implements Runnable {
         if (!isDay) {
             drawStars(canvas, elapsedTime);
         }
-
         return bitmap;
     }
 
@@ -135,11 +134,8 @@ public class BackgroundUpdater implements Runnable {
         return (interpolatedA << 24) | (interpolatedR << 16) | (interpolatedG << 8) | interpolatedB;
     }
 
-    // sun peaks at progress = 0.5 now
+    // sun peaks at progress = 0.5
     private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
-        // Calculate the position of the sun/moon
-    //    float xPosition = screenWidth * (1 - progress); // Invert direction for sun/moon rise
-    //    float yPosition = (float) (screenHeight * 0.5 * (1 - Math.cos(Math.PI * progress)));
 
         float x_center = screenWidth / 2; // Center of the screen horizontally
         float y_center = screenHeight; // Center of the screen vertically
@@ -175,7 +171,7 @@ public class BackgroundUpdater implements Runnable {
     private void drawStars(Canvas canvas, long elapsedTime) {
         Paint paint = new Paint();
         paint.setColor(Color.WHITE);
-        float duskProgress = Math.max(0, 1 - 4 * (float) elapsedTime / dayDuration); // Reverse progress during dusk
+        float duskProgress = Math.max(0, 1 - 4 * (float) elapsedTime / dayDuration);
 
         for (Star star : stars) {
             // Fade in stars based on dusk progress
