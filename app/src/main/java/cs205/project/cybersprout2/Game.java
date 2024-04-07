@@ -82,9 +82,7 @@ public class Game implements GameResultListener {
         this.screenHeight = context.getResources().getDisplayMetrics().heightPixels;
 
         this.background = new Background(context, screenWidth, screenHeight);
-        // Start thread to constantly update background values based on real time
-        this.backgroundUpdater = new BackgroundUpdater(background);
-        new Thread(backgroundUpdater, "BackgroundUpdater").start();
+
         this.useCanvas = useCanvas;
         plant = new Plant(context);
         this.dropletExecutorService = Executors.newFixedThreadPool(1);
@@ -128,8 +126,15 @@ public class Game implements GameResultListener {
         clouds.add(new Cloud(context, cloud1, 0, 200, -1.2f)); // Cloud 1
         clouds.add(new Cloud(context, cloud2, screenWidth, 100, 1.1f)); // Cloud 2
         clouds.add(new Cloud(context, cloud3, (float) screenWidth / 2, 300, 0.9f)); // Cloud 3
+
+        // initialise plant manager
         this.plantManager = new PlantManager(plant,this);
         new Thread(plantManager, "PlantManager").start();
+
+        // Start thread to constantly update background values based on real time
+        this.backgroundUpdater = new BackgroundUpdater(background);
+        new Thread(backgroundUpdater, "BackgroundUpdater").start();
+
         isGameReady = true;
     }
 
@@ -204,9 +209,6 @@ public class Game implements GameResultListener {
                         float fertilizerX = fertilizerBox.getX() + 250; // Starting X position
                         float fertilizerY = fertilizerBox.getY() + 175; // Starting Y position
 
-//                        Fertilizer fertilizer = new Fertilizer(context, fertilizerX, fertilizerY);
-//                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
-//                        fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
                         fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
                         fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
                         fertilizers.add(new Fertilizer(context, fertilizerX, fertilizerY));
@@ -293,7 +295,6 @@ public class Game implements GameResultListener {
         }
 
         canvas.drawBitmap(background.getBg(), 0,0,null);
-        //canvas.drawBitmap(background.getBody(), background.getBodyX(), background.getBodyY(), null);
         for (TouchObject obj : activeTouches.values()) {
             canvas.drawBitmap(obj.getImage(), obj.getX(), obj.getY(), null);
         }
