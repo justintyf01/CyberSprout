@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -20,16 +19,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.graphics.Paint;
-import android.view.MotionEvent;
 
-public class Game implements GameOverListener {
+public class Game implements GameResultListener {
 
     /************************** SYSTEM **************************/
     private final Context context;
     private final Predicate<Consumer<Canvas>> useCanvas;
     private final int screenHeight;
-    private GameOverListener gameOverListener;
-    public BackgroundUpdater updater;
     /************************* BACKGROUND *************************/
     private final Background background;
     private final Bitmap sun;
@@ -65,6 +61,8 @@ public class Game implements GameOverListener {
     private final boolean cloudsScaled = false;
     private boolean isGameReady = false;
     private boolean isGameOver = false;
+    private boolean isGameWon = false;
+
     private BackgroundUpdater backgroundUpdater;
 
     // fps
@@ -110,11 +108,11 @@ public class Game implements GameOverListener {
         this.playIcon = Bitmap.createScaledBitmap(originalPlayIcon, logoSize, logoSize, true);
         this.pausedBanner = Bitmap.createScaledBitmap(originalPausedBanner, originalPausedBanner.getWidth(), originalPausedBanner.getHeight(), true);
 
+        /****************** CLOUDS ******************/
         int cloudWidth = 200; // Desired width for the cloud images
         int cloudHeight = 150; // Desired height for the cloud images
 
         Bitmap cloud1Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud1);
-        /****************** CLOUDS ******************/
         Bitmap cloud1 = Bitmap.createScaledBitmap(cloud1Bitmap, cloudWidth, cloudHeight, false);
 
         Bitmap cloud2Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud2);
@@ -125,7 +123,6 @@ public class Game implements GameOverListener {
 
         Bitmap cloud4Bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cloud4);
         this.cloud4 = Bitmap.createScaledBitmap(cloud4Bitmap, cloudWidth, cloudHeight, false);
-
 
         clouds.add(new Cloud(context, cloud1, 0, 200, -1.2f)); // Cloud 1
         clouds.add(new Cloud(context, cloud2, screenWidth, 100, 1.1f)); // Cloud 2
@@ -246,6 +243,10 @@ public class Game implements GameOverListener {
         isGameOver = true;
     }
 
+    public void onWin() {
+        isGameWon = true;
+    }
+
     // this method does the actual drawing
     public void draw(Canvas canvas) {
         if (canvas == null) {
@@ -267,6 +268,23 @@ public class Game implements GameOverListener {
             canvas.drawText("Game Over", centerX, centerY, textPaint);
 
             return; // Don't draw anything else if the game is over
+        }
+        if (isGameWon) {
+            // Draw a semi-transparent overlay to dim the game background
+            Paint overlayPaint = new Paint();
+            overlayPaint.setColor(Color.argb(150, 0, 0, 0)); // Semi-transparent black
+            canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), overlayPaint);
+
+            // Display game over text
+            Paint textPaint = new Paint();
+            textPaint.setTextSize(100);
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            float centerX = canvas.getWidth() / 2.0f;
+            float centerY = canvas.getHeight() / 2.0f;
+            canvas.drawText("You saved Planet Earth!", centerX, centerY, textPaint);
+
+            return; // Don't draw anything else if the game is won
         }
 
         canvas.drawBitmap(background.getBg(), 0,0,null);

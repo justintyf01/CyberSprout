@@ -6,11 +6,11 @@ public class PlantManager implements Runnable {
     private final Plant plant;
     private final Object pauseLock = new Object();
     private boolean isPaused = false;
-    private final GameOverListener gameOverListener;
+    private final GameResultListener gameResultListener;
 
-    public PlantManager(Plant plant, GameOverListener gameOverListener) {
+    public PlantManager(Plant plant, GameResultListener gameResultListener) {
         this.plant = plant;
-        this.gameOverListener = gameOverListener; // Initialize it here
+        this.gameResultListener = gameResultListener; // Initialize it here
     }
 
     public void pause() {
@@ -72,13 +72,17 @@ public class PlantManager implements Runnable {
                     plant.setGrowth(0);
                     int stage = plant.getStage();
                     stage++;
+                    if (stage == 7) {
+                        gameResultListener.onWin(); // Win after surpassing last stage
+                        return;
+                    }
                     plant.setStage(stage);
 
                 } else if (growth < 0) {
                     int stage = plant.getStage();
                     if (stage <= 0 ){
                         plant.setGrowth(0); // Ensure growth doesn't go below zero
-                        gameOverListener.onGameOver(); // Notify the Game class
+                        gameResultListener.onGameOver(); // Notify the Game class
                         return;
 
                     } else {
