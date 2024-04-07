@@ -90,6 +90,7 @@ public class PlantManager implements Runnable {
                         plant.setGrowth(100);
                         stage--;
                         plant.setStage(stage);
+                        gameResultListener.currentStage(stage);
                     }
                 }
 
