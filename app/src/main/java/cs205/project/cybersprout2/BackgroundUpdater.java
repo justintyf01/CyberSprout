@@ -84,32 +84,6 @@ public class BackgroundUpdater implements Runnable {
         return bitmap;
     }
 
-//    private int interpolateBackgroundColor(float progress, boolean isDay) {
-//        // Early return if it's night
-//        if (!isDay) {
-//            return Color.parseColor("#000033"); // Dark blue for night
-//        }
-//
-//        // Calculate the sun's position for a smooth transition
-//        float sunsetStart = 0.65f; // Start transition to sunset at 70% of the day
-//        float sunsetEnd = 0.85f; // End transition to sunset at 85% of the day
-//
-//        int dayColor = Color.parseColor("#87CEEB"); // Light blue
-//        int sunsetColor = Color.parseColor("#FF8C00"); // Orange
-//        int nightColor = Color.parseColor("#000033"); // Dark blue
-//
-//        if (progress <= sunsetStart) {
-//            return dayColor;
-//        } else if (progress <= sunsetEnd) {
-//            // Calculate progress between sunsetStart and sunsetEnd
-//            float sunsetProgress = (progress - sunsetStart) / (sunsetEnd - sunsetStart);
-//            return interpolateColors(dayColor, sunsetColor, sunsetProgress);
-//        } else {
-//            // Night is approaching, smoothly transition to nightColor
-//            float nightProgress = (progress - sunsetEnd) / (1 - sunsetEnd);
-//            return interpolateColors(sunsetColor, nightColor, nightProgress);
-//        }
-//    }
 
     private int interpolateBackgroundColor(float progress, boolean isDay) {
         // Define colors for sunrise, brightest day, sunset, and darkest night
@@ -140,24 +114,6 @@ public class BackgroundUpdater implements Runnable {
         }
     }
 
-//    private int interpolateColors(int colorStart, int colorEnd, float progress) {
-//        int alphaStart = Color.alpha(colorStart);
-//        int redStart = Color.red(colorStart);
-//        int greenStart = Color.green(colorStart);
-//        int blueStart = Color.blue(colorStart);
-//
-//        int alphaEnd = Color.alpha(colorEnd);
-//        int redEnd = Color.red(colorEnd);
-//        int greenEnd = Color.green(colorEnd);
-//        int blueEnd = Color.blue(colorEnd);
-//
-//        int alpha = (int) (alphaStart * (1 - progress) + alphaEnd * progress);
-//        int red = (int) (redStart * (1 - progress) + redEnd * progress);
-//        int green = (int) (greenStart * (1 - progress) + greenEnd * progress);
-//        int blue = (int) (blueStart * (1 - progress) + blueEnd * progress);
-//
-//        return Color.argb(alpha, red, green, blue);
-//    }
 
     // Helper method to interpolate between two colors based on a factor (0 to 1)
     private int interpolateColors(int colorStart, int colorEnd, float factor) {
