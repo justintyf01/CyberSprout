@@ -63,7 +63,7 @@ public class PlantManager implements Runnable {
                     growth += 5;
                     plant.setGrowth(growth);
                 } else {
-                    growth -= 10;
+                    growth -= 3;
                     plant.setGrowth(growth);
                 }
 
@@ -73,36 +73,25 @@ public class PlantManager implements Runnable {
                     int stage = plant.getStage();
                     stage++;
                     plant.setStage(stage);
-                } else{
-                    if (growth <= 0) {
-                        int stage = plant.getStage();
-                        if (stage == 0 ){
+
+                } else if (growth < 0) {
+                    int stage = plant.getStage();
+                    if (stage <= 0 ){
                         plant.setGrowth(0); // Ensure growth doesn't go below zero
                         gameOverListener.onGameOver(); // Notify the Game class
                         return;
-                        }
-                        else{
-                            plant.setGrowth(100);
-                            stage--;
-                            plant.setStage(stage);
-                        }
+
+                    } else {
+                        plant.setGrowth(100);
+                        stage--;
+                        plant.setStage(stage);
                     }
                 }
 
-//                } else if (growth < 0) {
-//                    plant.setGrowth(90);
-//                    int stage = plant.getStage();
-//                    if (stage != 0) {
-//                        plant.setGrowth(90);
-//                    }
-//                    stage--;
-//                    plant.setStage(stage);
-//                }
-
                 counter++;
                 Thread.sleep(1000); // Sleep for 1 seconds
-            }
 
+            }
         } catch (InterruptedException e) {
             // Handle if the thread is interrupted while sleeping
             Thread.currentThread().interrupt(); // Restore interrupted status
