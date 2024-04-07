@@ -65,7 +65,6 @@ public class Background {
         return screenWidth;
     }
 
-    // NOTE: THIS METHOD RETURNS SUN OR NIGHT DEPENDING ON ISDAY
     public Bitmap getBody() {
         return isDay ? sun : moon;
     }

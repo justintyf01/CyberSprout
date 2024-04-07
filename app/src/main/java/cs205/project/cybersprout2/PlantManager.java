@@ -54,8 +54,6 @@ public class PlantManager implements Runnable {
                     Random dice = new Random();
                     plant.setNutrition(nutrition - dice.nextInt(10));
                     plant.setSaturation(saturation - dice.nextInt(10));
-//                    plant.setNutrition(--nutrition);
-//                    plant.setSaturation(--saturation);
                 }
 
                 // check nutrition and saturation

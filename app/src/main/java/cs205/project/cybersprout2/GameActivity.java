@@ -2,8 +2,6 @@ package cs205.project.cybersprout2;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.WindowManager;
-import android.widget.LinearLayout;
 
 public class GameActivity extends Activity {
     private GameView gameView;

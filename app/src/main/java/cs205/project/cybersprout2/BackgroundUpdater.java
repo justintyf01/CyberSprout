@@ -137,7 +137,7 @@ public class BackgroundUpdater implements Runnable {
     // sun peaks at progress = 0.5
     private void drawCelestialBody(Canvas canvas, float progress, boolean isDay) {
 
-        float x_center = screenWidth / 2; // Center of the screen horizontally
+        float x_center = screenWidth / 2.0f; // Center of the screen horizontally
         float y_center = screenHeight; // Center of the screen vertically
         float r = (float) (screenHeight * 0.8); // You need to define the radius of the circular path
 
@@ -156,15 +156,15 @@ public class BackgroundUpdater implements Runnable {
         int height = celestialBodyBitmap.getHeight();
 
         // Calculate the position where the bitmap will be drawn
-        float left = xPosition - width / 2;
-        float top = yPosition - height / 2;
+        float left = xPosition - width / 2.0f;
+        float top = yPosition - height / 2.0f;
 
         // Draw the bitmap at the calculated position
         canvas.drawBitmap(celestialBodyBitmap, left, top, null);
 
         // Update the Background class with the current celestial body position
-        background.setBodyX(left + celestialBodyBitmap.getWidth() / 2);
-        background.setBodyY(top + celestialBodyBitmap.getHeight() / 2);
+        background.setBodyX(left + celestialBodyBitmap.getWidth() / 2.0f);
+        background.setBodyY(top + celestialBodyBitmap.getHeight() / 2.0f);
         background.setDay(isDay);
     }
 

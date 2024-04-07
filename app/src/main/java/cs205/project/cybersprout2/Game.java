@@ -341,9 +341,6 @@ public class Game implements GameResultListener {
     }
 
     public void plantDraw(Canvas canvas) {
-//        if (isPaused){
-//            return;
-//        }
         float screenWidth = canvas.getWidth(); // For a custom view, or canvas.getWidth() otherwise
         float screenHeight = canvas.getHeight(); // For a custom view, or canvas.getHeight() otherwise
         int bitmapWidth = plant.getImageWidth();
@@ -398,14 +395,14 @@ public class Game implements GameResultListener {
 
         // Adjusted y-coordinates for drawing text and icons
         float textY = baseLineY + marginTopText;
-        float iconY = baseLineY - (iconSize / 2) - (textHeight / 2) + marginTopIcon;
+        float iconY = baseLineY - (iconSize / 2.0f) - (textHeight / 2) + marginTopIcon;
 
         // Draw the text and icons with the vertical shift
         canvas.drawText("% " + plant.getGrowth(), statusBarMargin * 2 + 80 + innerMargin, textY, paint);
         canvas.drawBitmap(growthIcon, statusBarMargin + innerMargin, iconY, null);
 
         // Increment the Y position for the next line
-        float lineSpacing = statusBarHeight / 3;
+        float lineSpacing = statusBarHeight / 3.0f;
         textY += lineSpacing;
         iconY += lineSpacing;
 

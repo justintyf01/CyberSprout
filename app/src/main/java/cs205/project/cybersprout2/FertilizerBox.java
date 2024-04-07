@@ -10,7 +10,7 @@ public class FertilizerBox extends TouchObject {
     public FertilizerBox(Context context, float x, float y) {
         super(x, y, BitmapFactory.decodeResource(context.getResources(), R.drawable.fertilizerbox));
 
-        super.setX(super.x - super.image.getWidth() / 2);
+        super.setX(super.x - super.image.getWidth() / 2.0f);
         super.setY(super.y - super.image.getHeight());
         setImage(super.getImage());
     }
