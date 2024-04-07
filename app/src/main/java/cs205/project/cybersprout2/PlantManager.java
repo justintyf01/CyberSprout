@@ -6,7 +6,7 @@ public class PlantManager implements Runnable {
     private final Plant plant;
     private final Object pauseLock = new Object();
     private boolean isPaused = false;
-    private final GameOverListener gameOverListener; // Add this
+    private final GameOverListener gameOverListener;
 
     public PlantManager(Plant plant, GameOverListener gameOverListener) {
         this.plant = plant;
@@ -75,9 +75,17 @@ public class PlantManager implements Runnable {
                     plant.setStage(stage);
                 } else{
                     if (growth <= 0) {
+                        int stage = plant.getStage();
+                        if (stage == 0 ){
                         plant.setGrowth(0); // Ensure growth doesn't go below zero
                         gameOverListener.onGameOver(); // Notify the Game class
-                        return; // Stop the thread or handle as necessary
+                        return;
+                        }
+                        else{
+                            plant.setGrowth(100);
+                            stage--;
+                            plant.setStage(stage);
+                        }
                     }
                 }
 
