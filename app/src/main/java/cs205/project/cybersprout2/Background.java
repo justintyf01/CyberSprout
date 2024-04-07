@@ -13,10 +13,9 @@ public class Background {
     private float bodyX;
     private float bodyY;
     private boolean isDay = true;
-
-//    public float getBodyX() {
-//        return bodyX;
-//    }
+    public float getBodyX() {
+        return bodyX;
+    }
 
     public void setBodyX(float bodyX) {
         this.bodyX = bodyX;

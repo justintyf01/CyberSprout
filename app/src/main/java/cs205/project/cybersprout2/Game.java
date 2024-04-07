@@ -241,8 +241,8 @@ public class Game {
 
         // Initialize paint for FPS counter
         fpsPaint = new Paint();
-        fpsPaint.setColor(Color.WHITE);
-        fpsPaint.setTextSize(40);
+        fpsPaint.setColor(Color.GREEN);
+        fpsPaint.setTextSize(100);
 
         useCanvas.test(this::draw);
     }
@@ -402,7 +402,7 @@ public class Game {
 
     public void drawFPS(Canvas canvas) {
 
-        canvas.drawText("FPS: " + fps, 880, 40, fpsPaint);
+        canvas.drawText("FPS: " + fps, 700, 100, fpsPaint);
     }
 
     public void updateGameState() {
